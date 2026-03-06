@@ -3,7 +3,7 @@ using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, ValidationReporter reporter)
+internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector)
 {
     public async Task<int> RunAsync(string input, CancellationToken cancellationToken)
     {
@@ -11,13 +11,13 @@ internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationColle
 
         if (files.Count == 0)
         {
-            Console.Error.WriteLine($"No .slnx files found for input: {input}");
+            await Console.Error.WriteLineAsync($"No .slnx files found for input: {input}");
             return 1;
         }
 
         var results = await collector.CollectAsync(files, cancellationToken);
 
-        ValidationReporter.Report(results);
+        await ValidationReporter.Report(results);
 
         return results.Any(r => r.HasErrors) ? 1 : 0;
     }
