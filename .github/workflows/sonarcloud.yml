@@ -1,0 +1,57 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install SonarScanner for .NET
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Restore dependencies
+        run: dotnet restore SLNX-validator.slnx
+
+      - name: Begin SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"slnx-validator" \
+            /o:"304notmodified" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.coverageReportPaths="coverage/SonarQube.xml"
+
+      - name: Build
+        run: dotnet build SLNX-validator.slnx --no-restore -c Release
+
+      - name: Test with coverage
+        run: dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal -- --coverage --coverage-output-format cobertura
+
+      - name: Convert coverage to SonarQube format
+        run: reportgenerator -reports:"**/TestResults/**/*.cobertura.xml" -targetdir:coverage -reporttypes:SonarQube
+
+      - name: End SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
