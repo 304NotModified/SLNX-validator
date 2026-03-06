@@ -17,7 +17,7 @@ internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationColle
 
         var results = await collector.CollectAsync(files, cancellationToken);
 
-        reporter.Report(results);
+        ValidationReporter.Report(results);
 
         return results.Any(r => r.HasErrors) ? 1 : 0;
     }
