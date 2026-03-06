@@ -21,7 +21,6 @@ public static class Program
         var services = new ServiceCollection()
             .AddSlnxValidator()
             .AddSingleton<ValidationCollector>()
-            .AddSingleton<ValidationReporter>()
             .AddSingleton<ValidatorRunner>()
             .BuildServiceProvider();
 
