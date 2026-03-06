@@ -27,7 +27,7 @@ jobs:
       - name: Install SonarScanner for .NET
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global dotnet-reportgenerator-globaltool
+          dotnet tool install --global dotnet-coverage
 
       - name: Restore dependencies
         run: dotnet restore SLNX-validator.slnx
@@ -41,16 +41,13 @@ jobs:
             /o:"304notmodified" \
             /d:sonar.token="${SONAR_TOKEN}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.coverageReportPaths="coverage/SonarQube.xml"
+            /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
 
       - name: Build
-        run: dotnet build SLNX-validator.slnx --no-restore -c Release
+        run: dotnet build SLNX-validator.slnx --no-incremental -c Release
 
       - name: Test with coverage
-        run: dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal -- --coverage --coverage-output-format cobertura
-
-      - name: Convert coverage to SonarQube format
-        run: reportgenerator -reports:"**/TestResults/**/*.cobertura.xml" -targetdir:coverage -reporttypes:SonarQube
+        run: dotnet-coverage collect "dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal" -f xml -o coverage.xml
 
       - name: End SonarCloud analysis
         env:
