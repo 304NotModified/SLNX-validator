@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using CoreSlnxValidator = JulianVerdurmen.SlnxValidator.Core.Validation.SlnxValidator;
@@ -15,7 +16,7 @@ public class SolutionIntegrationTests
             directory = directory.Parent;
         }
 
-        await Assert.That(directory).IsNotNull();
+        directory.Should().NotBeNull();
 
         var slnxFile = directory!.EnumerateFiles("*.slnx").First();
         var content = await File.ReadAllTextAsync(slnxFile.FullName);
@@ -23,6 +24,6 @@ public class SolutionIntegrationTests
         var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator());
         var result = await validator.ValidateAsync(content, slnxFile.DirectoryName!);
 
-        await Assert.That(result.Errors).IsEmpty();
+        result.Errors.Should().BeEmpty();
     }
 }
