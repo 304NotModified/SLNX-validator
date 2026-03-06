@@ -38,13 +38,13 @@ jobs:
             /o:"304notmodified" \
             /d:sonar.token="${SONAR_TOKEN}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+            /d:sonar.cs.vscoveragexml.reportsPaths="**/TestResults/**/*.xml"
 
       - name: Build
         run: dotnet build SLNX-validator.slnx --no-restore -c Release
 
       - name: Test with coverage
-        run: dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal --collect "XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal -- --coverage --coverage-output-format xml
 
       - name: End SonarCloud analysis
         env:
