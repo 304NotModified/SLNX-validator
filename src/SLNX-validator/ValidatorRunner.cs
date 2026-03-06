@@ -3,7 +3,7 @@ using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector)
+internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, ValidationReporter reporter)
 {
     public async Task<int> RunAsync(string input, CancellationToken cancellationToken)
     {
@@ -17,7 +17,7 @@ internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationColle
 
         var results = await collector.CollectAsync(files, cancellationToken);
 
-        await ValidationReporter.Report(results);
+        await reporter.Report(results);
 
         return results.Any(r => r.HasErrors) ? 1 : 0;
     }

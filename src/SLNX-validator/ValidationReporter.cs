@@ -2,9 +2,9 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal static class ValidationReporter
+internal class ValidationReporter
 {
-    public static async Task Report(IReadOnlyList<FileValidationResult> results)
+    public async Task Report(IReadOnlyList<FileValidationResult> results)
     {
         foreach (var result in results)
         {
@@ -31,7 +31,7 @@ internal static class ValidationReporter
         }
     }
 
-    private static string FormatError(ValidationError error)
+    private string FormatError(ValidationError error)
     {
         var location = error.Line is null ? "" : $"line {error.Line}: ";
         return $"  - {location}[{error.Code.ToCode()}] {error.Message}";
