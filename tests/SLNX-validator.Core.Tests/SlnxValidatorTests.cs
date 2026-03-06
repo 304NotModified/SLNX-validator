@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
@@ -20,7 +21,7 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsTrue();
+        result.IsValid.Should().BeTrue();
     }
 
     [Test]
@@ -32,9 +33,9 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors[0].Code).IsEqualTo(ValidationErrorCode.InvalidXml);
-        await Assert.That(result.Errors[0].Message).Contains("Invalid XML");
+        result.IsValid.Should().BeFalse();
+        result.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidXml);
+        result.Errors[0].Message.Should().Contain("Invalid XML");
     }
 
     [Test]
@@ -48,8 +49,8 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors[0].Code).IsEqualTo(ValidationErrorCode.XsdViolation);
+        result.IsValid.Should().BeFalse();
+        result.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
     }
 
     [Test]
@@ -64,8 +65,8 @@ public class SlnxValidatorTests
         // Path is use="required" in the XSD, so this is caught as an XSD violation
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors[0].Code).IsEqualTo(ValidationErrorCode.XsdViolation);
+        result.IsValid.Should().BeFalse();
+        result.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
     }
 
     [Test]
@@ -81,9 +82,9 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors[0].Code).IsEqualTo(ValidationErrorCode.ReferencedFileNotFound);
-        await Assert.That(result.Errors[0].Message).Contains("README.md");
+        result.IsValid.Should().BeFalse();
+        result.Errors[0].Code.Should().Be(ValidationErrorCode.ReferencedFileNotFound);
+        result.Errors[0].Message.Should().Contain("README.md");
     }
 
     [Test]
@@ -100,7 +101,7 @@ public class SlnxValidatorTests
         var result = await ValidatorWithFiles(Path.Combine(RepoRoot, "README.md"))
             .ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsTrue();
+        result.IsValid.Should().BeTrue();
     }
 
     [Test]
@@ -117,10 +118,10 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.Errors.Count).IsEqualTo(2);
+        result.Errors.Should().HaveCount(2);
         foreach (var error in result.Errors)
         {
-            await Assert.That(error.Code).IsEqualTo(ValidationErrorCode.ReferencedFileNotFound);
+            error.Code.Should().Be(ValidationErrorCode.ReferencedFileNotFound);
         }
     }
 
@@ -137,20 +138,20 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        await Assert.That(result.IsValid).IsFalse();
-        await Assert.That(result.Errors[0].Code).IsEqualTo(ValidationErrorCode.InvalidWildcardUsage);
-        await Assert.That(result.Errors[0].Message).Contains("docs/*.md");
+        result.IsValid.Should().BeFalse();
+        result.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidWildcardUsage);
+        result.Errors[0].Message.Should().Contain("docs/*.md");
     }
 
     [Test]
     public async Task ValidationErrorCode_ToCode_ReturnsPrefixedCode()
     {
-        await Assert.That(ValidationErrorCode.FileNotFound.ToCode()).IsEqualTo("SLNX0001");
-        await Assert.That(ValidationErrorCode.InvalidExtension.ToCode()).IsEqualTo("SLNX0002");
-        await Assert.That(ValidationErrorCode.NotATextFile.ToCode()).IsEqualTo("SLNX0003");
-        await Assert.That(ValidationErrorCode.InvalidXml.ToCode()).IsEqualTo("SLNX0010");
-        await Assert.That(ValidationErrorCode.ReferencedFileNotFound.ToCode()).IsEqualTo("SLNX0011");
-        await Assert.That(ValidationErrorCode.InvalidWildcardUsage.ToCode()).IsEqualTo("SLNX0012");
-        await Assert.That(ValidationErrorCode.XsdViolation.ToCode()).IsEqualTo("SLNX0013");
+        ValidationErrorCode.FileNotFound.ToCode().Should().Be("SLNX0001");
+        ValidationErrorCode.InvalidExtension.ToCode().Should().Be("SLNX0002");
+        ValidationErrorCode.NotATextFile.ToCode().Should().Be("SLNX0003");
+        ValidationErrorCode.InvalidXml.ToCode().Should().Be("SLNX0010");
+        ValidationErrorCode.ReferencedFileNotFound.ToCode().Should().Be("SLNX0011");
+        ValidationErrorCode.InvalidWildcardUsage.ToCode().Should().Be("SLNX0012");
+        ValidationErrorCode.XsdViolation.ToCode().Should().Be("SLNX0013");
     }
 }

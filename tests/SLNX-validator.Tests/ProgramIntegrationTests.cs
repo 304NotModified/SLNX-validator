@@ -1,3 +1,5 @@
+using AwesomeAssertions;
+
 namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ProgramIntegrationTests
@@ -7,7 +9,7 @@ public class ProgramIntegrationTests
     {
         var exitCode = await Program.Main([]);
 
-        await Assert.That(exitCode).IsNotEqualTo(0);
+        exitCode.Should().NotBe(0);
     }
 
     [Test]
@@ -15,7 +17,7 @@ public class ProgramIntegrationTests
     {
         var exitCode = await Program.Main(["C:\\does\\not\\exist.slnx"]);
 
-        await Assert.That(exitCode).IsNotEqualTo(0);
+        exitCode.Should().NotBe(0);
     }
 
     [Test]
@@ -38,7 +40,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([tempDir]);
 
-            await Assert.That(exitCode).IsEqualTo(0);
+            exitCode.Should().Be(0);
         }
         finally
         {
@@ -66,7 +68,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([$"{tempDir}/*.slnx"]);
 
-            await Assert.That(exitCode).IsEqualTo(0);
+            exitCode.Should().Be(0);
         }
         finally
         {
@@ -94,7 +96,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([slnxPath]);
 
-            await Assert.That(exitCode).IsEqualTo(0);
+            exitCode.Should().Be(0);
         }
         finally
         {
@@ -112,7 +114,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([path]);
 
-            await Assert.That(exitCode).IsNotEqualTo(0);
+            exitCode.Should().NotBe(0);
         }
         finally
         {
@@ -130,7 +132,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([path]);
 
-            await Assert.That(exitCode).IsNotEqualTo(0);
+            exitCode.Should().NotBe(0);
         }
         finally
         {
