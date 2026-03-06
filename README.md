@@ -1,5 +1,7 @@
 ﻿# slnx-validator
 
+[![NuGet](https://img.shields.io/nuget/v/slnx-validator.svg)](https://www.nuget.org/packages/slnx-validator/)
+
 `.slnx` is the modern XML-based solution format introduced by Microsoft — and honestly, it's a great improvement over the old `.sln` format. It's human-readable, merge-friendly, and easy to edit by hand. 🎉
 
 There's just one catch: neither Visual Studio, MSBuild, nor the `dotnet` CLI fully validates `.slnx` files. Invalid constructs are silently accepted, which can lead to confusing errors that are surprisingly hard to trace back to the solution file.
