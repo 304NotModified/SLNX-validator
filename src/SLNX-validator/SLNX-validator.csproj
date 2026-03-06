@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <AssemblyName>slnx-validator</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>slnx-validator</ToolCommandName>
+    <PackageId>slnx-validator</PackageId>
+    <Description>Validates .slnx solution files for issues that Visual Studio and MSBuild silently ignore, including XSD schema violations, missing solution folder files, and wildcard misuse. Supports single files, folders, and glob patterns.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>slnx;solution;validator;dotnet-tool</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.*" />
+    <PackageReference Include="System.CommandLine" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SLNX-validator.Core\SLNX-validator.Core.csproj" />
+  </ItemGroup>
+
+</Project>
+

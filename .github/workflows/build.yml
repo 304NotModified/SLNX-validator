@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore SLNX-validator.slnx
+
+      - name: Build
+        run: dotnet build SLNX-validator.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal
+
+      - name: Determine version suffix
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "suffix=" >> $GITHUB_OUTPUT
+          else
+            CLEAN=$(echo "$GITHUB_REF_NAME" | sed 's/[^a-zA-Z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//')
+            echo "suffix=$CLEAN" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pack
+        run: |
+          VERSION_SUFFIX="${{ steps.version.outputs.suffix }}"
+          if [ -n "$VERSION_SUFFIX" ]; then
+            dotnet pack SLNX-validator.slnx --no-build -c Release --output artifacts --version-suffix "$VERSION_SUFFIX"
+          else
+            dotnet pack SLNX-validator.slnx --no-build -c Release --output artifacts
+          fi
+
+      - name: Upload nuget package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+      # Disabled: Push to NuGet.org
+      # - name: Push to NuGet.org
+      #   if: github.ref == 'refs/heads/main'
+      #   run: dotnet nuget push artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

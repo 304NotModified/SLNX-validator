@@ -1,0 +1,11 @@
+<Project>
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>JulianVerdurmen.SlnxValidator</RootNamespace>
+  </PropertyGroup>
+
+</Project>
+
