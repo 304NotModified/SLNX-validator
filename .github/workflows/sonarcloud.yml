@@ -38,7 +38,7 @@ jobs:
             /o:"304notmodified" \
             /d:sonar.token="${SONAR_TOKEN}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.cobertura.reportsPaths="**/TestResults/**/*.cobertura.xml"
+            /d:sonar.coverageReportPaths="**/TestResults/**/*.cobertura.xml"
 
       - name: Build
         run: dotnet build SLNX-validator.slnx --no-restore -c Release
