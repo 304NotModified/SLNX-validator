@@ -2,7 +2,7 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidationReporter
+internal static sealed class ValidationReporter
 {
     public static async Task Report(IReadOnlyList<FileValidationResult> results)
     {
