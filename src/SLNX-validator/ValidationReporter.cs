@@ -4,7 +4,7 @@ namespace JulianVerdurmen.SlnxValidator;
 
 internal sealed class ValidationReporter
 {
-    public void Report(IReadOnlyList<FileValidationResult> results)
+    public static async Task Report(IReadOnlyList<FileValidationResult> results)
     {
         foreach (var result in results)
         {
@@ -22,11 +22,11 @@ internal sealed class ValidationReporter
 
         foreach (var result in failedResults)
         {
-            Console.Error.WriteLine(result.File);
+            await Console.Error.WriteLineAsync(result.File);
 
             foreach (var error in result.Errors)
             {
-                Console.Error.WriteLine(FormatError(error));
+                await Console.Error.WriteLineAsync(FormatError(error));
             }
         }
     }
