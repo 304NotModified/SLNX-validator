@@ -1,6 +1,9 @@
 ﻿# slnx-validator
 
 [![NuGet](https://img.shields.io/nuget/v/slnx-validator.svg)](https://www.nuget.org/packages/slnx-validator/)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=slnx-validator&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=slnx-validator)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=slnx-validator&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=slnx-validator)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=slnx-validator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=slnx-validator)
 
 `.slnx` is the modern XML-based solution format introduced by Microsoft — and honestly, it's a great improvement over the old `.sln` format. It's human-readable, merge-friendly, and easy to edit by hand. 🎉
 
