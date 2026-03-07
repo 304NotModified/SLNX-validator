@@ -51,8 +51,9 @@ jobs:
           fi
 
       - name: Upload nuget package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
+          compression-level: 0
           name: nupkg
           path: artifacts/*.nupkg
 
