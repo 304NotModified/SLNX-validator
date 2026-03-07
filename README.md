@@ -71,8 +71,8 @@ slnx-validator MySolution.slnx
 [FAIL] MySolution.slnx
 
 MySolution.slnx
-  - line 5: [SLNX0013] The element 'Folder' in namespace '...' has invalid child element 'Folder'. List of possible elements expected: 'Project'.
-  - line 12: [SLNX0011] File not found: docs\CONTRIBUTING.md
+  - line 5: [SLNX013] The element 'Folder' in namespace '...' has invalid child element 'Folder'. List of possible elements expected: 'Project'.
+  - line 12: [SLNX011] File not found: docs\CONTRIBUTING.md
 ```
 
 ### Multiple files — mixed results
@@ -86,8 +86,8 @@ slnx-validator src\
 [FAIL] src\Backend.slnx
 
 src\Backend.slnx
-  - line 4: [SLNX0011] File not found: docs\CONTRIBUTING.md
-  - line 8: [SLNX0012] Wildcard patterns are not supported in file paths: docs\*.md
+  - line 4: [SLNX011] File not found: docs\CONTRIBUTING.md
+  - line 8: [SLNX012] Wildcard patterns are not supported in file paths: docs\*.md
 ```
 
 ## What is validated
@@ -116,13 +116,13 @@ The following are **intentionally out of scope** because the toolchain already h
 
 | Code | Name | Description |
 |------|------|-------------|
-| `SLNX0001` | `FileNotFound`            | The input `.slnx` file does not exist. |
-| `SLNX0002` | `InvalidExtension`        | The input file does not have a `.slnx` extension. |
-| `SLNX0003` | `NotATextFile`            | The file is binary and cannot be parsed as XML. |
-| `SLNX0010` | `InvalidXml`              | The file is not valid XML (see [`examples/invalid-not-xml.slnx`](examples/invalid-not-xml.slnx)). |
-| `SLNX0011` | `FileNotFound`            | A file referenced in `<File Path="...">` does not exist on disk. |
-| `SLNX0012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
-| `SLNX0013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
+| `SLNX001` | `FileNotFound`            | The input `.slnx` file does not exist. |
+| `SLNX002` | `InvalidExtension`        | The input file does not have a `.slnx` extension. |
+| `SLNX003` | `NotATextFile`            | The file is binary and cannot be parsed as XML. |
+| `SLNX010` | `InvalidXml`              | The file is not valid XML (see [`examples/invalid-not-xml.slnx`](examples/invalid-not-xml.slnx)). |
+| `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
+| `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
+| `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
 
 ## XSD Schema
 
