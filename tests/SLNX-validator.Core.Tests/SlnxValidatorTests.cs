@@ -146,12 +146,12 @@ public class SlnxValidatorTests
     [Test]
     public async Task ValidationErrorCode_ToCode_ReturnsPrefixedCode()
     {
-        ValidationErrorCode.FileNotFound.ToCode().Should().Be("SLNX0001");
-        ValidationErrorCode.InvalidExtension.ToCode().Should().Be("SLNX0002");
-        ValidationErrorCode.NotATextFile.ToCode().Should().Be("SLNX0003");
-        ValidationErrorCode.InvalidXml.ToCode().Should().Be("SLNX0010");
-        ValidationErrorCode.ReferencedFileNotFound.ToCode().Should().Be("SLNX0011");
-        ValidationErrorCode.InvalidWildcardUsage.ToCode().Should().Be("SLNX0012");
-        ValidationErrorCode.XsdViolation.ToCode().Should().Be("SLNX0013");
+        ValidationErrorCode.FileNotFound.ToCode().Should().Be("SLNX001");
+        ValidationErrorCode.InvalidExtension.ToCode().Should().Be("SLNX002");
+        ValidationErrorCode.NotATextFile.ToCode().Should().Be("SLNX003");
+        ValidationErrorCode.InvalidXml.ToCode().Should().Be("SLNX010");
+        ValidationErrorCode.ReferencedFileNotFound.ToCode().Should().Be("SLNX011");
+        ValidationErrorCode.InvalidWildcardUsage.ToCode().Should().Be("SLNX012");
+        ValidationErrorCode.XsdViolation.ToCode().Should().Be("SLNX013");
     }
 }
