@@ -13,6 +13,12 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
+
+    <VersionPrefix>0.2.0</VersionPrefix>
+    <PackageReleaseNotes>
+      - Added logo
+      - Shorter error codes
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
