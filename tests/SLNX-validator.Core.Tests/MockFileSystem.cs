@@ -8,6 +8,5 @@ internal sealed class MockFileSystem(params string[] existingPaths) : IFileSyste
 
     public bool FileExists(string path) => _existingPaths.Contains(path);
     public bool DirectoryExists(string path) => false;
-    public string ReadAllText(string path) => throw new NotSupportedException();
     public IEnumerable<string> GetFiles(string directory, string searchPattern) => [];
 }
