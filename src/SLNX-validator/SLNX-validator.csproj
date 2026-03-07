@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>0.2.0</VersionPrefix>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>slnx-validator</AssemblyName>
@@ -14,12 +13,13 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
-  </PropertyGroup>
 
-  <PackageReleaseNotes>
-    - Added logo
-    - Shorter error codes
-  </PackageReleaseNotes>
+    <VersionPrefix>0.2.0</VersionPrefix>
+    <PackageReleaseNotes>
+      - Added logo
+      - Shorter error codes
+    </PackageReleaseNotes>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
