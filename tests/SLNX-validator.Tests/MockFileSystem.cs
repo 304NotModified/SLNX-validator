@@ -1,6 +1,6 @@
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
-namespace JulianVerdurmen.SlnxValidator.Core.Tests;
+namespace JulianVerdurmen.SlnxValidator.Tests;
 
 internal sealed class MockFileSystem(params string[] existingPaths) : IFileSystem
 {
@@ -15,8 +15,8 @@ internal sealed class MockFileSystem(params string[] existingPaths) : IFileSyste
     public void CreateDirectory(string path) => CreatedDirectories.Add(path);
     public Stream CreateFile(string path)
     {
-        var stream = new MemoryStream();
-        CreatedFiles[path] = stream;
-        return stream;
+        var ms = new MemoryStream();
+        CreatedFiles[path] = ms;
+        return ms;
     }
 }

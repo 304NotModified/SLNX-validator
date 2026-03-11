@@ -1,24 +1,29 @@
 using JulianVerdurmen.SlnxValidator.Core;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector)
+internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, ISonarReporter sonarReporter)
 {
-    public async Task<int> RunAsync(string input, CancellationToken cancellationToken)
+    public async Task<int> RunAsync(string input, string? sonarqubeReportPath, bool continueOnError, CancellationToken cancellationToken)
     {
         var files = resolver.Resolve(input);
 
         if (files.Count == 0)
         {
             await Console.Error.WriteLineAsync($"No .slnx files found for input: {input}");
-            return 1;
+            return continueOnError ? 0 : 1;
         }
 
         var results = await collector.CollectAsync(files, cancellationToken);
 
         await ValidationReporter.Report(results);
 
-        return results.Any(r => r.HasErrors) ? 1 : 0;
+        if (sonarqubeReportPath is not null)
+            await sonarReporter.WriteReportAsync(results, sonarqubeReportPath);
+
+        var hasErrors = results.Any(r => r.HasErrors);
+        return !continueOnError && hasErrors ? 1 : 0;
     }
 }
