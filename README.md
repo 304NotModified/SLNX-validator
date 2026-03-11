@@ -49,6 +49,68 @@ slnx-validator "MySolution.slnx, src\*.slnx, other\"
 
 Exit code `0` means everything is valid. Exit code `1` means one or more errors were found.
 
+## Options
+
+### `--sonarqube-report-file <file>`
+
+Writes a [SonarQube generic issue report](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/importing-external-issues/generic-issue-import-format) to the specified JSON file. Import it into your Sonar analysis via the `sonar.externalIssuesReportPaths` property.
+
+> 💡 When using `--sonarqube-report-file`, it's recommended to also pass `--continue-on-error` so the tool always exits with code `0`. This lets the SonarQube quality gate — not the tool's exit code — determine whether your pipeline fails.
+
+```powershell
+slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --continue-on-error
+```
+
+### `--continue-on-error`
+
+Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube handles the failure decision. Default: `false`.
+
+## SonarQube integration example
+
+```powershell
+slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --continue-on-error
+```
+
+```json
+{
+  "rules": [
+    {
+      "id": "SLNX011",
+      "name": "Referenced file not found",
+      "description": "A file referenced in a <File Path=\"...\"> element does not exist on disk.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "ruleId": "SLNX011",
+      "primaryLocation": {
+        "message": "File not found: docs\\CONTRIBUTING.md",
+        "filePath": "MySolution.slnx",
+        "textRange": {
+          "startLine": 4
+        }
+      }
+    }
+  ]
+}
+```
+
+Then configure the SonarQube scanner:
+
+```properties
+sonar.externalIssuesReportPaths=sonar-issues.json
+```
+
 ## Example output
 
 ### All valid ✅

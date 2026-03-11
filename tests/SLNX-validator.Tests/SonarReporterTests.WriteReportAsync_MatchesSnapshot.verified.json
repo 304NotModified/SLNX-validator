@@ -1,0 +1,56 @@
+﻿{
+  "rules": [
+    {
+      "id": "SLNX011",
+      "name": "Referenced file not found",
+      "description": "A file referenced in a <File Path=\"...\"> element does not exist on disk.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX012",
+      "name": "Invalid wildcard usage",
+      "description": "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MINOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "ruleId": "SLNX011",
+      "primaryLocation": {
+        "message": "File not found: docs\\CONTRIBUTING.md",
+        "filePath": "Backend.slnx",
+        "textRange": {
+          "startLine": 4
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX012",
+      "primaryLocation": {
+        "message": "Wildcard patterns are not supported: docs\\*.md",
+        "filePath": "Backend.slnx",
+        "textRange": {
+          "startLine": 8
+        }
+      }
+    }
+  ]
+}

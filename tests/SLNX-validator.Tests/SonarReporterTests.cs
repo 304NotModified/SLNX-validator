@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
@@ -8,16 +9,9 @@ public class SonarReporterTests
 {
     private static async Task<JsonDocument> WriteAndReadReportAsync(IReadOnlyList<FileValidationResult> results)
     {
-        var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".json");
-        try
-        {
-            await SonarReporter.WriteReportAsync(results, path);
-            return JsonDocument.Parse(await File.ReadAllTextAsync(path));
-        }
-        finally
-        {
-            File.Delete(path);
-        }
+        using var stream = new MemoryStream();
+        await SonarReporter.WriteReportAsync(results, stream);
+        return JsonDocument.Parse(stream.ToArray());
     }
 
     [Test]
@@ -149,5 +143,28 @@ public class SonarReporterTests
 
         root.GetProperty("rules").GetArrayLength().Should().Be(2);
         root.GetProperty("issues").GetArrayLength().Should().Be(2);
+    }
+
+    [Test]
+    public async Task WriteReportAsync_MatchesSnapshot()
+    {
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "Backend.slnx",
+                HasErrors = true,
+                Errors =
+                [
+                    new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found: docs\\CONTRIBUTING.md", Line: 4),
+                    new ValidationError(ValidationErrorCode.InvalidWildcardUsage, "Wildcard patterns are not supported: docs\\*.md", Line: 8),
+                ]
+            }
+        };
+
+        using var stream = new MemoryStream();
+        await SonarReporter.WriteReportAsync(results, stream);
+
+        await Verify(stream, "json");
     }
 }

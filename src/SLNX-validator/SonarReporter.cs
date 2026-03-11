@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
@@ -10,10 +11,22 @@ internal static class SonarReporter
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public static async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath)
+    {
+        var directory = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(directory))
+            Directory.CreateDirectory(directory);
+
+        await using var stream = File.Create(outputPath);
+        await WriteReportAsync(results, stream);
+    }
+
+    public static async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream)
     {
         var usedCodes = results
             .SelectMany(r => r.Errors)
@@ -30,12 +43,7 @@ internal static class SonarReporter
 
         var report = new SonarReport { Rules = rules, Issues = issues };
 
-        var directory = Path.GetDirectoryName(outputPath);
-        if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
-
-        await using var stream = File.Create(outputPath);
-        await JsonSerializer.SerializeAsync(stream, report, JsonOptions);
+        await JsonSerializer.SerializeAsync(outputStream, report, JsonOptions);
     }
 
     private static SonarIssue BuildIssue(string filePath, ValidationError error) => new()
@@ -54,43 +62,43 @@ internal static class SonarReporter
         ValidationErrorCode.FileNotFound => CreateRule(code,
             "Input file not found",
             "The specified .slnx file does not exist.",
-            "BUG", "MAJOR", "COMPLETE", "HIGH"),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.InvalidExtension => CreateRule(code,
             "Invalid file extension",
             "The input file does not have a .slnx extension.",
-            "CODE_SMELL", "MINOR", "CONVENTIONAL", "MEDIUM"),
+            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.CONVENTIONAL, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.NotATextFile => CreateRule(code,
             "File is not a text file",
             "The file is binary and cannot be parsed as XML.",
-            "BUG", "MAJOR", "COMPLETE", "HIGH"),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.InvalidXml => CreateRule(code,
             "Invalid XML",
             "The .slnx file is not valid XML.",
-            "BUG", "MAJOR", "CONVENTIONAL", "HIGH"),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.ReferencedFileNotFound => CreateRule(code,
             "Referenced file not found",
             "A file referenced in a <File Path=\"...\"> element does not exist on disk.",
-            "BUG", "MAJOR", "COMPLETE", "HIGH"),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.InvalidWildcardUsage => CreateRule(code,
             "Invalid wildcard usage",
             "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported.",
-            "CODE_SMELL", "MINOR", "CONVENTIONAL", "MEDIUM"),
+            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
 
         ValidationErrorCode.XsdViolation => CreateRule(code,
             "XSD schema violation",
             "The XML structure violates the .slnx schema.",
-            "BUG", "MAJOR", "CONVENTIONAL", "HIGH"),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
     };
 
     private static SonarRule CreateRule(ValidationErrorCode code, string name, string description,
-        string type, string severity, string cleanCodeAttribute, string impactSeverity) => new()
+        SonarRuleType type, SonarRuleSeverity severity, SonarCleanCodeAttribute cleanCodeAttribute, SonarImpactSeverity impactSeverity) => new()
     {
         Id = code.ToCode(),
         Name = name,
@@ -99,7 +107,7 @@ internal static class SonarReporter
         CleanCodeAttribute = cleanCodeAttribute,
         Type = type,
         Severity = severity,
-        Impacts = [new SonarImpact { SoftwareQuality = "MAINTAINABILITY", Severity = impactSeverity }]
+        Impacts = [new SonarImpact { SoftwareQuality = SonarSoftwareQuality.MAINTAINABILITY, Severity = impactSeverity }]
     };
 
     private sealed record SonarReport
@@ -114,16 +122,16 @@ internal static class SonarReporter
         public required string Name { get; init; }
         public required string Description { get; init; }
         public required string EngineId { get; init; }
-        public required string CleanCodeAttribute { get; init; }
-        public required string Type { get; init; }
-        public required string Severity { get; init; }
+        public required SonarCleanCodeAttribute CleanCodeAttribute { get; init; }
+        public required SonarRuleType Type { get; init; }
+        public required SonarRuleSeverity Severity { get; init; }
         public required List<SonarImpact> Impacts { get; init; }
     }
 
     private sealed record SonarImpact
     {
-        public required string SoftwareQuality { get; init; }
-        public required string Severity { get; init; }
+        public required SonarSoftwareQuality SoftwareQuality { get; init; }
+        public required SonarImpactSeverity Severity { get; init; }
     }
 
     private sealed record SonarIssue
@@ -143,4 +151,10 @@ internal static class SonarReporter
     {
         public required int StartLine { get; init; }
     }
+
+    private enum SonarRuleType { BUG, CODE_SMELL, VULNERABILITY }
+    private enum SonarRuleSeverity { BLOCKER, CRITICAL, MAJOR, MINOR, INFO }
+    private enum SonarCleanCodeAttribute { FORMATTED, CONVENTIONAL, IDENTIFIABLE, CLEAR, LOGICAL, COMPLETE, EFFICIENT, FOCUSED, DISTINCT, MODULAR, TESTED, LAWFUL, TRUSTWORTHY, RESPECTFUL }
+    private enum SonarSoftwareQuality { SECURITY, RELIABILITY, MAINTAINABILITY }
+    private enum SonarImpactSeverity { BLOCKER, HIGH, MEDIUM, LOW, INFO }
 }
