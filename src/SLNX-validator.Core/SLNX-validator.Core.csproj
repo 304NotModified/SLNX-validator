@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>slnx-validator.core</AssemblyName>
     <PackageId>JulianVerdurmen.SlnxValidator.Core</PackageId>
     <Description>Core validation logic for .slnx solution files.</Description>
   </PropertyGroup>
