@@ -1,4 +1,4 @@
-name: SonarQube
+name: SonarCloud
 on:
   push:
     branches:
