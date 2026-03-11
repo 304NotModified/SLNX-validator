@@ -1,11 +1,12 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal static class SonarReporter
+internal sealed class SonarReporter(IFileSystem fileSystem)
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -16,17 +17,17 @@ internal static class SonarReporter
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public static async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath)
+    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath)
     {
         var directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
+            fileSystem.CreateDirectory(directory);
 
-        await using var stream = File.Create(outputPath);
+        await using var stream = fileSystem.CreateFile(outputPath);
         await WriteReportAsync(results, stream);
     }
 
-    public static async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream)
+    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream)
     {
         var usedCodes = results
             .SelectMany(r => r.Errors)

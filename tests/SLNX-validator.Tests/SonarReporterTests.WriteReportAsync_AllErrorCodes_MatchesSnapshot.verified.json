@@ -1,0 +1,181 @@
+﻿{
+  "rules": [
+    {
+      "id": "SLNX001",
+      "name": "Input file not found",
+      "description": "The specified .slnx file does not exist.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX002",
+      "name": "Invalid file extension",
+      "description": "The input file does not have a .slnx extension.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "CONVENTIONAL",
+      "type": "BUG",
+      "severity": "MINOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX003",
+      "name": "File is not a text file",
+      "description": "The file is binary and cannot be parsed as XML.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX010",
+      "name": "Invalid XML",
+      "description": "The .slnx file is not valid XML.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX011",
+      "name": "Referenced file not found",
+      "description": "A file referenced in a <File Path=\"...\"> element does not exist on disk.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX012",
+      "name": "Invalid wildcard usage",
+      "description": "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MINOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX013",
+      "name": "XSD schema violation",
+      "description": "The XML structure violates the .slnx schema.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "MEDIUM"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "ruleId": "SLNX001",
+      "primaryLocation": {
+        "message": "Sample message for FileNotFound",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 1
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX002",
+      "primaryLocation": {
+        "message": "Sample message for InvalidExtension",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 2
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX003",
+      "primaryLocation": {
+        "message": "Sample message for NotATextFile",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 3
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX010",
+      "primaryLocation": {
+        "message": "Sample message for InvalidXml",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 4
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX011",
+      "primaryLocation": {
+        "message": "Sample message for ReferencedFileNotFound",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 5
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX012",
+      "primaryLocation": {
+        "message": "Sample message for InvalidWildcardUsage",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 6
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX013",
+      "primaryLocation": {
+        "message": "Sample message for XsdViolation",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 7
+        }
+      }
+    }
+  ]
+}

@@ -33,6 +33,7 @@ public static class Program
         var services = new ServiceCollection()
             .AddSlnxValidator()
             .AddSingleton<ValidationCollector>()
+            .AddSingleton<SonarReporter>()
             .AddSingleton<ValidatorRunner>()
             .BuildServiceProvider();
 

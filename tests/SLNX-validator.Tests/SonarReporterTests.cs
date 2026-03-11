@@ -7,10 +7,12 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class SonarReporterTests
 {
+    private static SonarReporter CreateReporter() => new(new MockFileSystem());
+
     private static async Task<JsonDocument> WriteAndReadReportAsync(IReadOnlyList<FileValidationResult> results)
     {
         using var stream = new MemoryStream();
-        await SonarReporter.WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(results, stream);
         return JsonDocument.Parse(stream.ToArray());
     }
 
@@ -163,8 +165,58 @@ public class SonarReporterTests
         };
 
         using var stream = new MemoryStream();
-        await SonarReporter.WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(results, stream);
 
         await Verify(stream, "json");
+    }
+
+    [Test]
+    public async Task WriteReportAsync_AllErrorCodes_MatchesSnapshot()
+    {
+        var allCodes = Enum.GetValues<ValidationErrorCode>();
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "Solution.slnx",
+                HasErrors = true,
+                Errors = [.. allCodes.Select((code, i) => new ValidationError(code, $"Sample message for {code}", Line: i + 1))]
+            }
+        };
+
+        using var stream = new MemoryStream();
+        await CreateReporter().WriteReportAsync(results, stream);
+
+        await Verify(stream, "json");
+    }
+
+    [Test]
+    public async Task WriteReportAsync_WithOutputPath_CreatesParentDirectory()
+    {
+        var fileSystem = new MockFileSystem();
+        var reporter = new SonarReporter(fileSystem);
+        var results = new List<FileValidationResult>
+        {
+            new() { File = "test.slnx", HasErrors = false, Errors = [] }
+        };
+
+        await reporter.WriteReportAsync(results, "output/reports/sonar.json");
+
+        fileSystem.CreatedDirectories.Should().Equal([Path.Combine("output", "reports")]);
+    }
+
+    [Test]
+    public async Task WriteReportAsync_WithOutputPathNoSubdirectory_DoesNotCreateDirectory()
+    {
+        var fileSystem = new MockFileSystem();
+        var reporter = new SonarReporter(fileSystem);
+        var results = new List<FileValidationResult>
+        {
+            new() { File = "test.slnx", HasErrors = false, Errors = [] }
+        };
+
+        await reporter.WriteReportAsync(results, "sonar.json");
+
+        fileSystem.CreatedDirectories.Should().BeEmpty();
     }
 }

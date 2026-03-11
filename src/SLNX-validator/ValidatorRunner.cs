@@ -3,7 +3,7 @@ using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector)
+internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, SonarReporter sonarReporter)
 {
     public async Task<int> RunAsync(string input, string? sonarqubeReportPath, bool continueOnError, CancellationToken cancellationToken)
     {
@@ -20,7 +20,7 @@ internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationColle
         await ValidationReporter.Report(results);
 
         if (sonarqubeReportPath is not null)
-            await SonarReporter.WriteReportAsync(results, sonarqubeReportPath);
+            await sonarReporter.WriteReportAsync(results, sonarqubeReportPath);
 
         var hasErrors = results.Any(r => r.HasErrors);
         return !continueOnError && hasErrors ? 1 : 0;
