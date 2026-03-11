@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
-namespace JulianVerdurmen.SlnxValidator;
+namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
-internal sealed class SonarReporter(IFileSystem fileSystem)
+public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -110,52 +110,4 @@ internal sealed class SonarReporter(IFileSystem fileSystem)
         Severity = severity,
         Impacts = [new SonarImpact { SoftwareQuality = SonarSoftwareQuality.MAINTAINABILITY, Severity = impactSeverity }]
     };
-
-    private sealed record SonarReport
-    {
-        public required List<SonarRule> Rules { get; init; }
-        public required List<SonarIssue> Issues { get; init; }
-    }
-
-    private sealed record SonarRule
-    {
-        public required string Id { get; init; }
-        public required string Name { get; init; }
-        public required string Description { get; init; }
-        public required string EngineId { get; init; }
-        public required SonarCleanCodeAttribute CleanCodeAttribute { get; init; }
-        public required SonarRuleType Type { get; init; }
-        public required SonarRuleSeverity Severity { get; init; }
-        public required List<SonarImpact> Impacts { get; init; }
-    }
-
-    private sealed record SonarImpact
-    {
-        public required SonarSoftwareQuality SoftwareQuality { get; init; }
-        public required SonarImpactSeverity Severity { get; init; }
-    }
-
-    private sealed record SonarIssue
-    {
-        public required string RuleId { get; init; }
-        public required SonarLocation PrimaryLocation { get; init; }
-    }
-
-    private sealed record SonarLocation
-    {
-        public required string Message { get; init; }
-        public required string FilePath { get; init; }
-        public SonarTextRange? TextRange { get; init; }
-    }
-
-    private sealed record SonarTextRange
-    {
-        public required int StartLine { get; init; }
-    }
-
-    private enum SonarRuleType { BUG, CODE_SMELL, VULNERABILITY }
-    private enum SonarRuleSeverity { BLOCKER, CRITICAL, MAJOR, MINOR, INFO }
-    private enum SonarCleanCodeAttribute { FORMATTED, CONVENTIONAL, IDENTIFIABLE, CLEAR, LOGICAL, COMPLETE, EFFICIENT, FOCUSED, DISTINCT, MODULAR, TESTED, LAWFUL, TRUSTWORTHY, RESPECTFUL }
-    private enum SonarSoftwareQuality { SECURITY, RELIABILITY, MAINTAINABILITY }
-    private enum SonarImpactSeverity { BLOCKER, HIGH, MEDIUM, LOW, INFO }
 }

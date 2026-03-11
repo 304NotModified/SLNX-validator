@@ -1,9 +1,10 @@
 using JulianVerdurmen.SlnxValidator.Core;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, SonarReporter sonarReporter)
+internal sealed class ValidatorRunner(SlnxFileResolver resolver, ValidationCollector collector, ISonarReporter sonarReporter)
 {
     public async Task<int> RunAsync(string input, string? sonarqubeReportPath, bool continueOnError, CancellationToken cancellationToken)
     {

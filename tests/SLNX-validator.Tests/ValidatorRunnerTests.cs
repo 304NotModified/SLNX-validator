@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using CoreSlnxValidator = JulianVerdurmen.SlnxValidator.Core.Validation.SlnxValidator;
 

@@ -1,9 +1,9 @@
-using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
+using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
-namespace JulianVerdurmen.SlnxValidator.Tests;
+namespace JulianVerdurmen.SlnxValidator.Core.Tests;
 
 public class SonarReporterTests
 {
