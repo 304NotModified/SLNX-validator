@@ -14,11 +14,12 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
 
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.3.0</VersionPrefix>
     <PackageReleaseNotes>
-      - Added logo
-      - Shorter error codes
-    </PackageReleaseNotes>
+		- Added Sonarqube generic report output format for easier integration with Sonarqube and other tools that support this format.
+		- Added continue-on-error option to allow the tool to continue validating other files even if one file fails validation, improving usability in CI pipelines and large codebases.
+
+	</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.*" />
     <PackageReference Include="System.CommandLine" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SLNX-validator.Tests" />
   </ItemGroup>
 
   <ItemGroup>
