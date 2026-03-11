@@ -7,7 +7,7 @@ namespace JulianVerdurmen.SlnxValidator.Core.Tests;
 public class SlnxValidatorTests
 {
     private static Validation.SlnxValidator ValidatorWithFiles(params string[] existingPaths)
-        => new(new MockFileSystem(existingPaths), new XsdValidator());
+        => new(new MockFileSystem(existingPaths), new XsdValidator(new SlnxXsdProvider()));
 
     private static readonly string RepoRoot = OperatingSystem.IsWindows() ? @"C:\repo" : "/repo";
 

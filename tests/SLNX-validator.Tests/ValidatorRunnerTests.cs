@@ -11,7 +11,7 @@ public class ValidatorRunnerTests
     private static ValidatorRunner CreateRunner(IFileSystem fileSystem)
     {
         var resolver = new SlnxFileResolver(fileSystem);
-        var validator = new CoreSlnxValidator(fileSystem, new XsdValidator());
+        var validator = new CoreSlnxValidator(fileSystem, new XsdValidator(new SlnxXsdProvider()));
         var collector = new ValidationCollector(fileSystem, validator);
         var sonarReporter = new SonarReporter(fileSystem);
         return new ValidatorRunner(resolver, collector, sonarReporter);
