@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace JulianVerdurmen.SlnxValidator.Core.Validation;
 
-public sealed class SlnxXsdProvider
+public sealed class SlnxXsdProvider : ISlnxXsdProvider
 {
     // Source: https://github.com/microsoft/vs-solutionpersistence/blob/main/src/Microsoft.VisualStudio.SolutionPersistence/Serializer/Xml/Slnx.xsd
     private const string XsdResourceName = "JulianVerdurmen.SlnxValidator.Slnx.xsd";
