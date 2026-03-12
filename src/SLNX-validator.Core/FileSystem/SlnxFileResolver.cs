@@ -1,6 +1,6 @@
 namespace JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
-public sealed class SlnxFileResolver(IFileSystem fileSystem)
+internal sealed class SlnxFileResolver(IFileSystem fileSystem) : ISlnxFileResolver
 {
     /// <summary>
     /// Resolves one or more .slnx file paths from the given input.

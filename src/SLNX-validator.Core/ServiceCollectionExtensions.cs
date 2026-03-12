@@ -13,8 +13,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISonarReporter, SonarReporter>();
         services.AddSingleton<ISlnxXsdProvider, SlnxXsdProvider>();
         services.AddSingleton<IXsdValidator, XsdValidator>();
-        services.AddSingleton<Validation.SlnxValidator>();
-        services.AddSingleton<SlnxFileResolver>();
+        services.AddSingleton<ISlnxValidator, Validation.SlnxValidator>();
+        services.AddSingleton<ISlnxFileResolver, SlnxFileResolver>();
         return services;
     }
 }

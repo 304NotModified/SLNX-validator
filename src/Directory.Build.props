@@ -1,15 +1,18 @@
 <Project>
 
-  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+	<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
 
-  <PropertyGroup>
-    <Authors>Julian Verdurmen</Authors>
-    <Product>JulianVerdurmen.SlnxValidator</Product>
-    <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
-    <IsPackable>false</IsPackable>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/304NotModified/SLNX-validator</RepositoryUrl>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Authors>Julian Verdurmen</Authors>
+		<Product>JulianVerdurmen.SlnxValidator</Product>
+		<Deterministic>true</Deterministic>
+		<ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+		<IsPackable>false</IsPackable>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/304NotModified/SLNX-validator</RepositoryUrl>
+	</PropertyGroup>
+	<ItemGroup>
+		<InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+	</ItemGroup>
 
 </Project>
