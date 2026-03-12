@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IFileSystem, RealFileSystem>();
         services.AddSingleton<ISonarReporter, SonarReporter>();
+        services.AddSingleton<ISlnxXsdProvider, SlnxXsdProvider>();
         services.AddSingleton<IXsdValidator, XsdValidator>();
         services.AddSingleton<Validation.SlnxValidator>();
         services.AddSingleton<SlnxFileResolver>();

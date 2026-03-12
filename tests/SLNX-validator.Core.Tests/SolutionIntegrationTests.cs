@@ -21,7 +21,7 @@ public class SolutionIntegrationTests
         var slnxFile = directory!.EnumerateFiles("*.slnx").First();
         var content = await File.ReadAllTextAsync(slnxFile.FullName);
 
-        var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator());
+        var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator(new SlnxXsdProvider()));
         var result = await validator.ValidateAsync(content, slnxFile.DirectoryName!);
 
         result.Errors.Should().BeEmpty();
