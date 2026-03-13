@@ -1,10 +1,10 @@
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
-using CoreSlnxValidator = JulianVerdurmen.SlnxValidator.Core.Validation.SlnxValidator;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidationCollector(IFileSystem fileSystem, CoreSlnxValidator validator)
+internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator validator)
 {
     public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(IReadOnlyList<string> files, CancellationToken cancellationToken)
     {

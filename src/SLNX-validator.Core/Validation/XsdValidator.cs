@@ -4,7 +4,7 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator.Core.Validation;
 
-public sealed class XsdValidator(ISlnxXsdProvider xsdProvider) : IXsdValidator
+internal sealed class XsdValidator(ISlnxXsdProvider xsdProvider) : IXsdValidator
 {
     public async Task ValidateAsync(string slnxContent, ValidationResult result, CancellationToken cancellationToken)
     {

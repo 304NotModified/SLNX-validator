@@ -2,19 +2,16 @@ using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
-using CoreSlnxValidator = JulianVerdurmen.SlnxValidator.Core.Validation.SlnxValidator;
-
+using NSubstitute;
 namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidatorRunnerTests
 {
     private static ValidatorRunner CreateRunner(IFileSystem fileSystem)
     {
-        var resolver = new SlnxFileResolver(fileSystem);
-        var validator = new CoreSlnxValidator(fileSystem, new XsdValidator(new SlnxXsdProvider()));
-        var collector = new ValidationCollector(fileSystem, validator);
+        var collector = new ValidationCollector(fileSystem, Substitute.For<ISlnxValidator>());
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(resolver, collector, sonarReporter);
+        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter);
     }
 
     [Test]

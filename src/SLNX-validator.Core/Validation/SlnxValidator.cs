@@ -5,7 +5,7 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator.Core.Validation;
 
-public sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdValidator)
+internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdValidator) : ISlnxValidator
 {
     /// <summary>
     /// Validates a .slnx file against the XSD schema and checks that all referenced files exist on disk.
