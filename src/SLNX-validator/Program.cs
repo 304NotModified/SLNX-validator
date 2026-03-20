@@ -23,11 +23,17 @@ public static class Program
             Description = "Continue and exit with code 0 even when validation errors are found."
         };
 
+        var requiredFilesOption = new Option<string?>("--required-files")
+        {
+            Description = "Semicolon-separated glob patterns for required files and directories. The tool exits with code 2 if any pattern produces no match or a matched path does not exist."
+        };
+
         var rootCommand = new RootCommand("Validates .slnx solution files.")
         {
             inputArgument,
             sonarqubeReportOption,
-            continueOnErrorOption
+            continueOnErrorOption,
+            requiredFilesOption
         };
 
         var services = new ServiceCollection()
@@ -38,6 +44,14 @@ public static class Program
 
         rootCommand.SetAction(async (parseResult, cancellationToken) =>
         {
+            var requiredFiles = parseResult.GetValue(requiredFilesOption);
+            if (requiredFiles is not null)
+            {
+                var checkResult = await RequiredFilesChecker.CheckAsync(requiredFiles, Environment.CurrentDirectory);
+                if (checkResult != 0)
+                    return checkResult;
+            }
+
             var input = parseResult.GetValue(inputArgument);
             var sonarqubeReport = parseResult.GetValue(sonarqubeReportOption);
             var continueOnError = parseResult.GetValue(continueOnErrorOption);

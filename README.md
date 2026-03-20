@@ -65,6 +65,54 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 
 Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube handles the failure decision. Default: `false`.
 
+### `--required-files`
+
+Verify that a set of files or directories matching glob patterns exist before the tool runs. If any pattern produces no match, or if a matched path does not exist on disk, the tool exits with code `2`.
+
+**Syntax**
+
+```
+--required-files "<pattern1>;<pattern2>;..."
+```
+
+Patterns are separated by `;`. Patterns starting with `!` are exclusions. Pattern order matters: a later pattern can override an earlier one.
+
+**Supported glob syntax**
+
+| Pattern | Meaning | Example |
+|---|---|---|
+| `*` | Any file in the current directory (no path separator) | `doc/*.md` |
+| `**` | Any depth of subdirectories | `src/**/*.cs` |
+| `!pattern` | Exclude matching paths | `!**/bin/**` |
+| `dir/` | Match a directory and its contents | `docs/` |
+
+> **Note:** `{a,b}` alternation and `[abc]` character classes are not supported by this library. Use multiple patterns separated by `;` instead.
+> For example, instead of `*.{cs,fs}`, use `**/*.cs;**/*.fs`.
+
+**Examples**
+
+Require all `.md` files under `doc/`:
+```
+slnx-validator MySolution.slnx --required-files "doc/*.md"
+```
+
+Require all `.cs` files under `src/`, excluding the `bin` and `obj` folders:
+```
+slnx-validator MySolution.slnx --required-files "src/**/*.cs;!**/bin/**;!**/obj/**"
+```
+
+Require a specific config file and the entire `docs/` directory:
+```
+slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
+```
+
+**Exit codes**
+
+| Code | Description |
+|------|-------------|
+| `0`  | All patterns matched and all matched paths exist on disk. |
+| `2`  | One or more patterns produced no matches, or a matched path does not exist on disk. |
+
 ## SonarQube integration example
 
 ```powershell
@@ -185,6 +233,7 @@ The following are **intentionally out of scope** because the toolchain already h
 | `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
 | `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
 | `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
+| `SLNX020` | `RequiredFilesNotFound`   | A `--required-files` pattern produced no matches, or a matched path does not exist on disk (exits with code `2`). |
 
 ## XSD Schema
 

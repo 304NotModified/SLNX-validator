@@ -139,4 +139,81 @@ public class ProgramIntegrationTests
             File.Delete(path);
         }
     }
+
+    [Test]
+    [NotInParallel("CurrentDirectory")]
+    public async Task Invoke_WithRequiredFiles_AllMatch_ReturnsZeroExitCode()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir);
+
+        var csprojPath = Path.Combine(tempDir, "App.csproj");
+        var slnxPath = Path.Combine(tempDir, "test.slnx");
+        var docDir = Path.Combine(tempDir, "doc");
+        Directory.CreateDirectory(docDir);
+
+        await File.WriteAllTextAsync(csprojPath, "<Project />");
+        await File.WriteAllTextAsync(slnxPath, """
+            <Solution>
+              <Project Path="App.csproj" />
+            </Solution>
+            """);
+        await File.WriteAllTextAsync(Path.Combine(docDir, "readme.md"), "# Readme");
+
+        try
+        {
+            var previousDir = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = tempDir;
+            try
+            {
+                var exitCode = await Program.Main([slnxPath, "--required-files", "doc/*.md"]);
+                exitCode.Should().Be(0);
+            }
+            finally
+            {
+                Environment.CurrentDirectory = previousDir;
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    [NotInParallel("CurrentDirectory")]
+    public async Task Invoke_WithRequiredFiles_NoMatch_ReturnsTwoExitCode()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir);
+
+        var csprojPath = Path.Combine(tempDir, "App.csproj");
+        var slnxPath = Path.Combine(tempDir, "test.slnx");
+
+        await File.WriteAllTextAsync(csprojPath, "<Project />");
+        await File.WriteAllTextAsync(slnxPath, """
+            <Solution>
+              <Project Path="App.csproj" />
+            </Solution>
+            """);
+
+        try
+        {
+            var previousDir = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = tempDir;
+            try
+            {
+                var exitCode = await Program.Main([slnxPath, "--required-files", "nonexistent/**/*.md"]);
+                exitCode.Should().Be(2);
+            }
+            finally
+            {
+                Environment.CurrentDirectory = previousDir;
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }
