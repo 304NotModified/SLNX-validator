@@ -13,9 +13,11 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
 
-    <VersionPrefix>0.3.0</VersionPrefix>
+    <VersionPrefix>0.4.0</VersionPrefix>
     <PackageReleaseNotes>
-		- Changed assembly file names
+	
+- Added --required-files CLI argument with glob pattern matching
+- Changed assembly file names
 
 	</PackageReleaseNotes>
   </PropertyGroup>
