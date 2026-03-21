@@ -11,13 +11,12 @@ public interface IRequiredFilesChecker
     IReadOnlyList<string> ResolveMatchedPaths(string patternsRaw, string rootDirectory);
 
     /// <summary>
-    /// Checks which of the <paramref name="requiredAbsolutePaths"/> are NOT referenced as a
-    /// <c>&lt;File Path="..."&gt;</c> element in the given .slnx content.
-    /// Paths in the .slnx are resolved relative to <paramref name="slnxDirectory"/>.
+    /// Checks which of the <paramref name="requiredAbsolutePaths"/> are NOT present in
+    /// <paramref name="slnxFileRefs"/>.
     /// Returns a <see cref="ValidationError"/> for each missing file.
     /// </summary>
     IReadOnlyList<ValidationError> CheckInSlnx(
         IReadOnlyList<string> requiredAbsolutePaths,
-        string slnxContent,
-        string slnxDirectory);
+        SlnxFileRefs slnxFileRefs);
 }
+

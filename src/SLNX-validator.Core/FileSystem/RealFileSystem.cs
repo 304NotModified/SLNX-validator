@@ -8,4 +8,7 @@ public sealed class RealFileSystem : IFileSystem
         Directory.GetFiles(directory, searchPattern);
     public void CreateDirectory(string path) => Directory.CreateDirectory(path);
     public Stream CreateFile(string path) => File.Create(path);
+    public Stream OpenRead(string path) => File.OpenRead(path);
+    public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default) =>
+        File.ReadAllTextAsync(path, cancellationToken);
 }

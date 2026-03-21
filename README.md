@@ -101,9 +101,9 @@ Require all `.md` files under `doc/`:
 slnx-validator MySolution.slnx --required-files "doc/*.md"
 ```
 
-Require all `.cs` files under `src/`, excluding the `bin` and `obj` folders:
+Require all `.yaml` files except those in the `src/` folder:
 ```
-slnx-validator MySolution.slnx --required-files "src/**/*.cs;!**/bin/**;!**/obj/**"
+slnx-validator MySolution.slnx --required-files "**/*.yaml;!src/**"
 ```
 
 Require a specific config file and the entire `docs/` directory:
@@ -116,7 +116,7 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 | Code | Description |
 |------|-------------|
 | `0`  | All patterns matched and all matched files are referenced in the solution. |
-| `1`  | One or more required files don't exist on disk or are not referenced in the solution (same as any other validation error). |
+| `1`  | Any validation error — including required files not existing or not referenced. |
 
 ## SonarQube integration example
 

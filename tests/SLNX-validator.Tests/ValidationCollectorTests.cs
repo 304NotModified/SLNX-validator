@@ -7,144 +7,83 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidationCollectorTests
 {
-    private static string CreateTempDir()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        return tempDir;
-    }
+    private const string SlnxPath = "/fake/test.slnx";
+    private const string SlnxContent = "<Solution />";
 
-    private static ValidationCollector CreateCollector(
-        IRequiredFilesChecker? checker = null,
-        ISlnxValidator? validator = null)
+    private static (ValidationCollector collector, IRequiredFilesChecker checker) CreateCollector(
+        string? slnxContent = SlnxContent,
+        IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
-        validator ??= Substitute.For<ISlnxValidator>();
-        validator
-            .ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        var validator = Substitute.For<ISlnxValidator>();
+        validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
-        return new ValidationCollector(new MockFileSystem(), validator, checker);
+        var fileSystem = new MockFileSystem(new Dictionary<string, string>
+        {
+            [SlnxPath] = slnxContent ?? ""
+        });
+        return (new ValidationCollector(fileSystem, validator, checker), checker);
     }
 
     [Test]
     public async Task CollectAsync_RequiredFilesPatternNoMatch_AddsRequiredFileDoesntExistOnSystemError()
     {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var slnxPath = Path.Combine(tempDir, "test.slnx");
-            await File.WriteAllTextAsync(slnxPath, "<Solution />");
+        var (collector, _) = CreateCollector();
+        var options = new RequiredFilesOptions(MatchedPaths: [], Pattern: "*.md");
 
-            var fileSystem = new MockFileSystem(slnxPath);
-            var validator = Substitute.For<ISlnxValidator>();
-            validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(new ValidationResult());
-            var checker = Substitute.For<IRequiredFilesChecker>();
-            var collector = new ValidationCollector(fileSystem, validator, checker);
+        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
 
-            // Empty matched paths = pattern matched nothing on disk
-            var results = await collector.CollectAsync([slnxPath], matchedRequiredPaths: [], "*.md", CancellationToken.None);
-
-            results.Should().HaveCount(1);
-            results[0].HasErrors.Should().BeTrue();
-            results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.RequiredFileDoesntExistOnSystem);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeTrue();
+        results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.RequiredFileDoesntExistOnSystem);
     }
 
     [Test]
     public async Task CollectAsync_RequiredFileMissingFromSlnx_AddsRequiredFileNotReferencedInSolutionError()
     {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var slnxPath = Path.Combine(tempDir, "test.slnx");
-            await File.WriteAllTextAsync(slnxPath, "<Solution />");
-            var requiredFile = Path.Combine(tempDir, "readme.md");
+        var requiredFile = "/fake/doc/readme.md";
+        var checker = Substitute.For<IRequiredFilesChecker>();
+        checker.CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<SlnxFileRefs>())
+            .Returns([new ValidationError(ValidationErrorCode.RequiredFileNotReferencedInSolution,
+                $"Required file is not referenced in the solution: {requiredFile} — add: <File Path=\"doc/readme.md\" />")]);
 
-            var fileSystem = new MockFileSystem(slnxPath);
-            var validator = Substitute.For<ISlnxValidator>();
-            validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(new ValidationResult());
-            var checker = Substitute.For<IRequiredFilesChecker>();
-            checker.CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<string>(), Arg.Any<string>())
-                .Returns([new ValidationError(ValidationErrorCode.RequiredFileNotReferencedInSolution,
-                    $"Required file is not referenced in the solution: {requiredFile} — add: <File Path=\"readme.md\" />")]);
+        var (collector, _) = CreateCollector(checker: checker);
+        var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
-            var collector = new ValidationCollector(fileSystem, validator, checker);
+        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
 
-            var results = await collector.CollectAsync([slnxPath], [requiredFile], "*.md", CancellationToken.None);
-
-            results.Should().HaveCount(1);
-            results[0].HasErrors.Should().BeTrue();
-            results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.RequiredFileNotReferencedInSolution);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeTrue();
+        results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.RequiredFileNotReferencedInSolution);
     }
 
     [Test]
     public async Task CollectAsync_RequiredFileMatchedAndReferenced_NoExtraErrors()
     {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var slnxPath = Path.Combine(tempDir, "test.slnx");
-            await File.WriteAllTextAsync(slnxPath, "<Solution />");
-            var requiredFile = Path.Combine(tempDir, "readme.md");
+        var requiredFile = "/fake/doc/readme.md";
+        var checker = Substitute.For<IRequiredFilesChecker>();
+        checker.CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<SlnxFileRefs>())
+            .Returns(Array.Empty<ValidationError>());
 
-            var fileSystem = new MockFileSystem(slnxPath);
-            var validator = Substitute.For<ISlnxValidator>();
-            validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(new ValidationResult());
-            var checker = Substitute.For<IRequiredFilesChecker>();
-            checker.CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<string>(), Arg.Any<string>())
-                .Returns(Array.Empty<ValidationError>());
+        var (collector, _) = CreateCollector(checker: checker);
+        var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
-            var collector = new ValidationCollector(fileSystem, validator, checker);
+        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
 
-            var results = await collector.CollectAsync([slnxPath], [requiredFile], "*.md", CancellationToken.None);
-
-            results.Should().HaveCount(1);
-            results[0].HasErrors.Should().BeFalse();
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeFalse();
     }
 
     [Test]
-    public async Task CollectAsync_NullMatchedRequiredPaths_SkipsRequiredFilesCheck()
+    public async Task CollectAsync_NullOptions_SkipsRequiredFilesCheck()
     {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var slnxPath = Path.Combine(tempDir, "test.slnx");
-            await File.WriteAllTextAsync(slnxPath, "<Solution />");
+        var (collector, checker) = CreateCollector();
 
-            var fileSystem = new MockFileSystem(slnxPath);
-            var validator = Substitute.For<ISlnxValidator>();
-            validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(new ValidationResult());
-            var checker = Substitute.For<IRequiredFilesChecker>();
-            var collector = new ValidationCollector(fileSystem, validator, checker);
+        var results = await collector.CollectAsync([SlnxPath], requiredFilesOptions: null, CancellationToken.None);
 
-            // null matchedRequiredPaths = no --required-files option was provided
-            var results = await collector.CollectAsync([slnxPath], matchedRequiredPaths: null, requiredFilesPattern: null, CancellationToken.None);
-
-            results.Should().HaveCount(1);
-            results[0].HasErrors.Should().BeFalse();
-            checker.DidNotReceive().CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<string>(), Arg.Any<string>());
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeFalse();
+        checker.DidNotReceive().CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<SlnxFileRefs>());
     }
 }
+

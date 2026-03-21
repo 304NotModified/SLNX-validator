@@ -1,3 +1,4 @@
+using System.Text;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 
 namespace JulianVerdurmen.SlnxValidator.Core.Tests;
@@ -19,4 +20,7 @@ internal sealed class MockFileSystem(params string[] existingPaths) : IFileSyste
         CreatedFiles[path] = stream;
         return stream;
     }
+    public Stream OpenRead(string path) => new MemoryStream(Encoding.UTF8.GetBytes(""));
+    public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default) =>
+        Task.FromResult("");
 }

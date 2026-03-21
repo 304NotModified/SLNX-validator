@@ -44,12 +44,14 @@ public static class Program
 
         rootCommand.SetAction(async (parseResult, cancellationToken) =>
         {
-            var input = parseResult.GetValue(inputArgument);
-            var sonarqubeReport = parseResult.GetValue(sonarqubeReportOption);
-            var continueOnError = parseResult.GetValue(continueOnErrorOption);
-            var requiredFiles = parseResult.GetValue(requiredFilesOption);
-            return await services.GetRequiredService<ValidatorRunner>()
-                .RunAsync(input!, sonarqubeReport, continueOnError, requiredFiles, Environment.CurrentDirectory, cancellationToken);
+            var options = new ValidatorRunnerOptions(
+                Input: parseResult.GetValue(inputArgument)!,
+                SonarqubeReportPath: parseResult.GetValue(sonarqubeReportOption),
+                ContinueOnError: parseResult.GetValue(continueOnErrorOption),
+                RequiredFilesPattern: parseResult.GetValue(requiredFilesOption),
+                WorkingDirectory: Environment.CurrentDirectory);
+
+            return await services.GetRequiredService<ValidatorRunner>().RunAsync(options, cancellationToken);
         });
 
         return await rootCommand.Parse(args).InvokeAsync();

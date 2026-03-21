@@ -8,8 +8,7 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
 {
     public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(
         IReadOnlyList<string> files,
-        IReadOnlyList<string>? matchedRequiredPaths,
-        string? requiredFilesPattern,
+        RequiredFilesOptions? requiredFilesOptions,
         CancellationToken cancellationToken)
     {
         var results = new List<FileValidationResult>(files.Count);
@@ -36,23 +35,25 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
                 continue;
             }
 
-            var content = await File.ReadAllTextAsync(file, cancellationToken);
+            var content = await fileSystem.ReadAllTextAsync(file, cancellationToken);
             var directory = Path.GetDirectoryName(file)!;
             var result = await validator.ValidateAsync(content, directory, cancellationToken);
 
             var allErrors = result.Errors.ToList();
 
-            if (matchedRequiredPaths is not null)
+            if (requiredFilesOptions is not null)
             {
-                if (matchedRequiredPaths.Count == 0)
+                var matched = requiredFilesOptions.MatchedPaths;
+                if (matched is null || matched.Count == 0)
                 {
                     allErrors.Add(new ValidationError(
                         ValidationErrorCode.RequiredFileDoesntExistOnSystem,
-                        $"Required file does not exist on the system. No files matched: {requiredFilesPattern}"));
+                        $"Required file does not exist on the system. No files matched: {requiredFilesOptions.Pattern}"));
                 }
                 else
                 {
-                    allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matchedRequiredPaths, content, directory));
+                    var slnxFileRefs = SlnxFileRefs.Parse(content, directory);
+                    allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFileRefs));
                 }
             }
 
@@ -75,10 +76,10 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
             Errors = [new ValidationError(code, message)],
         };
 
-    private static bool IsBinaryFile(string path)
+    private bool IsBinaryFile(string path)
     {
         Span<byte> buffer = stackalloc byte[8000];
-        using var stream = File.OpenRead(path);
+        using var stream = fileSystem.OpenRead(path);
         var bytesRead = stream.Read(buffer);
         return buffer[..bytesRead].Contains((byte)0);
     }

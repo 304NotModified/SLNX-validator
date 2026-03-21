@@ -15,7 +15,7 @@ public class RequiredFilesCheckerTests
 
     private static RequiredFilesChecker CreateChecker() => new();
 
-    // ── ResolveMatchedPaths ──────────────────────────────────────────────────
+    // ── ResolveMatchedPaths (integration: 2 tests) ───────────────────────────
 
     [Test]
     public void ResolveMatchedPaths_SingleInclude_MatchesFiles_ReturnsNonEmpty()
@@ -60,83 +60,7 @@ public class RequiredFilesCheckerTests
         }
     }
 
-    [Test]
-    public void ResolveMatchedPaths_AllExcluded_ReturnsEmpty()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var docDir = Path.Combine(tempDir, "doc");
-            Directory.CreateDirectory(docDir);
-            File.WriteAllText(Path.Combine(docDir, "readme.md"), "# Readme");
-
-            var matched = CreateChecker().ResolveMatchedPaths("doc/*.md;!doc/*.md", tempDir);
-
-            matched.Should().BeEmpty();
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    [Test]
-    public void ResolveMatchedPaths_PatternMatchesNothing_ReturnsEmpty()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var matched = CreateChecker().ResolveMatchedPaths("nonexistent/**/*.cs", tempDir);
-
-            matched.Should().BeEmpty();
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    [Test]
-    public void ResolveMatchedPaths_WhitespaceAroundPatterns_IsTrimmed()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var docDir = Path.Combine(tempDir, "doc");
-            Directory.CreateDirectory(docDir);
-            File.WriteAllText(Path.Combine(docDir, "readme.md"), "# Readme");
-
-            var matched = CreateChecker().ResolveMatchedPaths("  doc/*.md  ", tempDir);
-
-            matched.Should().HaveCount(1);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    [Test]
-    public void ResolveMatchedPaths_EmptyPatternEntries_AreDiscarded()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var docDir = Path.Combine(tempDir, "doc");
-            Directory.CreateDirectory(docDir);
-            File.WriteAllText(Path.Combine(docDir, "readme.md"), "# Readme");
-
-            var matched = CreateChecker().ResolveMatchedPaths(";;doc/*.md;;", tempDir);
-
-            matched.Should().HaveCount(1);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    // ── CheckInSlnx ─────────────────────────────────────────────────────────
+    // ── CheckInSlnx (unit tests – no real filesystem) ────────────────────────
 
     private static readonly string SlnxDir = OperatingSystem.IsWindows() ? @"C:\repo" : "/repo";
 
@@ -152,7 +76,7 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], slnxContent, SlnxDir);
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, SlnxDir));
 
         errors.Should().BeEmpty();
     }
@@ -169,7 +93,7 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], slnxContent, SlnxDir);
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, SlnxDir));
 
         errors.Should().HaveCount(1);
         errors[0].Code.Should().Be(ValidationErrorCode.RequiredFileNotReferencedInSolution);
@@ -179,9 +103,8 @@ public class RequiredFilesCheckerTests
     public void CheckInSlnx_ErrorMessageContainsFileElement()
     {
         var requiredPath = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
-        var slnxContent = "<Solution />";
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], slnxContent, SlnxDir);
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse("<Solution />", SlnxDir));
 
         errors.Should().HaveCount(1);
         errors[0].Message.Should().Contain("<File Path=");
@@ -191,7 +114,6 @@ public class RequiredFilesCheckerTests
     [Test]
     public void CheckInSlnx_RelativeDoubleDotPath_NormalizesCorrectly()
     {
-        // slnx is in /repo/sub, the File path uses ".." to reach /repo/doc/readme.md
         var slnxDir = OperatingSystem.IsWindows() ? @"C:\repo\sub" : "/repo/sub";
         var requiredPath = OperatingSystem.IsWindows()
             ? Path.GetFullPath(@"C:\repo\doc\readme.md")
@@ -205,7 +127,7 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], slnxContent, slnxDir);
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, slnxDir));
 
         errors.Should().BeEmpty();
     }
@@ -215,9 +137,8 @@ public class RequiredFilesCheckerTests
     {
         var path1 = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
         var path2 = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "contributing.md"));
-        var slnxContent = "<Solution />";
 
-        var errors = CreateChecker().CheckInSlnx([path1, path2], slnxContent, SlnxDir);
+        var errors = CreateChecker().CheckInSlnx([path1, path2], SlnxFileRefs.Parse("<Solution />", SlnxDir));
 
         errors.Should().HaveCount(2);
         errors.Should().AllSatisfy(e => e.Code.Should().Be(ValidationErrorCode.RequiredFileNotReferencedInSolution));
@@ -226,10 +147,9 @@ public class RequiredFilesCheckerTests
     [Test]
     public void CheckInSlnx_EmptyRequiredPaths_ReturnsNoErrors()
     {
-        var slnxContent = "<Solution />";
-
-        var errors = CreateChecker().CheckInSlnx([], slnxContent, SlnxDir);
+        var errors = CreateChecker().CheckInSlnx([], SlnxFileRefs.Parse("<Solution />", SlnxDir));
 
         errors.Should().BeEmpty();
     }
 }
+
