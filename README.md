@@ -65,6 +65,59 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 
 Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube handles the failure decision. Default: `false`.
 
+### `--required-files`
+
+Verify that a set of files or directories matching glob patterns exist on disk **and** are referenced as `<File>` entries in the solution file(s) being validated. Any failure is reported as a normal validation error (exit code `1`) that also appears in SonarQube reports.
+
+- **Disk check** — if no files match the glob patterns, a `SLNX020` (`RequiredFileDoesntExistOnSystem`) error is added to the solution result.
+- **Reference check** — for each matched file that is not referenced as `<File Path="...">` in the `.slnx`, a `SLNX021` (`RequiredFileNotReferencedInSolution`) error is added. The error message shows the exact `<File>` element that should be added.
+
+Relative paths in the `.slnx` are resolved relative to the solution file's location.
+
+**Syntax**
+
+```
+--required-files "<pattern1>;<pattern2>;..."
+```
+
+Patterns are separated by `;`. Patterns starting with `!` are exclusions. Pattern order matters: a later pattern can override an earlier one.
+
+**Supported glob syntax**
+
+| Pattern | Meaning | Example |
+|---|---|---|
+| `*` | Any file in the current directory (no path separator) | `doc/*.md` |
+| `**` | Any depth of subdirectories | `src/**/*.cs` |
+| `!pattern` | Exclude matching paths | `!**/bin/**` |
+| `dir/` | Match a directory and its contents | `docs/` |
+
+> **Note:** `{a,b}` alternation and `[abc]` character classes are not supported by this library. Use multiple patterns separated by `;` instead.
+> For example, instead of `*.{cs,fs}`, use `**/*.cs;**/*.fs`.
+
+**Examples**
+
+Require all `.md` files under `doc/`:
+```
+slnx-validator MySolution.slnx --required-files "doc/*.md"
+```
+
+Require all `.yaml` files except those in the `src/` folder:
+```
+slnx-validator MySolution.slnx --required-files "**/*.yaml;!src/**"
+```
+
+Require a specific config file and the entire `docs/` directory:
+```
+slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
+```
+
+**Exit codes**
+
+| Code | Description |
+|------|-------------|
+| `0`  | All patterns matched and all matched files are referenced in the solution. |
+| `1`  | Any validation error — including required files not existing or not referenced. |
+
 ## SonarQube integration example
 
 ```powershell
@@ -185,6 +238,8 @@ The following are **intentionally out of scope** because the toolchain already h
 | `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
 | `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
 | `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
+| `SLNX020` | `RequiredFileDoesntExistOnSystem`   | A `--required-files` pattern matched no files on the file system. |
+| `SLNX021` | `RequiredFileNotReferencedInSolution` | A `--required-files` matched file exists on disk but is not referenced as a `<File>` element in the solution. |
 
 ## XSD Schema
 

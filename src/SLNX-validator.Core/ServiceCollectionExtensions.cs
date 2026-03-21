@@ -15,6 +15,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IXsdValidator, XsdValidator>();
         services.AddSingleton<ISlnxValidator, Validation.SlnxValidator>();
         services.AddSingleton<ISlnxFileResolver, SlnxFileResolver>();
+        services.AddSingleton<IRequiredFilesChecker, Validation.RequiredFilesChecker>();
         return services;
     }
 }

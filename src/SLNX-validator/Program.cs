@@ -23,11 +23,17 @@ public static class Program
             Description = "Continue and exit with code 0 even when validation errors are found."
         };
 
+        var requiredFilesOption = new Option<string?>("--required-files")
+        {
+            Description = "Semicolon-separated glob patterns for files that must exist on disk and be referenced as <File> elements in the solution."
+        };
+
         var rootCommand = new RootCommand("Validates .slnx solution files.")
         {
             inputArgument,
             sonarqubeReportOption,
-            continueOnErrorOption
+            continueOnErrorOption,
+            requiredFilesOption
         };
 
         var services = new ServiceCollection()
@@ -38,10 +44,14 @@ public static class Program
 
         rootCommand.SetAction(async (parseResult, cancellationToken) =>
         {
-            var input = parseResult.GetValue(inputArgument);
-            var sonarqubeReport = parseResult.GetValue(sonarqubeReportOption);
-            var continueOnError = parseResult.GetValue(continueOnErrorOption);
-            return await services.GetRequiredService<ValidatorRunner>().RunAsync(input!, sonarqubeReport, continueOnError, cancellationToken);
+            var options = new ValidatorRunnerOptions(
+                Input: parseResult.GetValue(inputArgument)!,
+                SonarqubeReportPath: parseResult.GetValue(sonarqubeReportOption),
+                ContinueOnError: parseResult.GetValue(continueOnErrorOption),
+                RequiredFilesPattern: parseResult.GetValue(requiredFilesOption),
+                WorkingDirectory: Environment.CurrentDirectory);
+
+            return await services.GetRequiredService<ValidatorRunner>().RunAsync(options, cancellationToken);
         });
 
         return await rootCommand.Parse(args).InvokeAsync();

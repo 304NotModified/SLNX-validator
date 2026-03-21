@@ -12,4 +12,8 @@ public enum ValidationErrorCode
     ReferencedFileNotFound = 11,
     InvalidWildcardUsage = 12,
     XsdViolation = 13,
+
+    // Required-files errors
+    RequiredFileDoesntExistOnSystem = 20,
+    RequiredFileNotReferencedInSolution = 21,
 }
