@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using JulianVerdurmen.SlnxValidator.Core;
+using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JulianVerdurmen.SlnxValidator;
@@ -45,17 +46,34 @@ public static class Program
         rootCommand.SetAction(async (parseResult, cancellationToken) =>
         {
             var requiredFiles = parseResult.GetValue(requiredFilesOption);
+            IReadOnlyList<string>? matchedRequiredPaths = null;
+
             if (requiredFiles is not null)
             {
-                var checkResult = await RequiredFilesChecker.CheckAsync(requiredFiles, Environment.CurrentDirectory);
-                if (checkResult != 0)
-                    return checkResult;
+                // Pre-check: glob patterns must match at least one file on disk.
+                matchedRequiredPaths = RequiredFilesChecker.ResolveMatchedPaths(requiredFiles, Environment.CurrentDirectory);
+                if (matchedRequiredPaths.Count == 0)
+                {
+                    await Console.Error.WriteLineAsync($"[SLNX020] Required files check failed: no files matched the patterns: {requiredFiles}");
+                    return 2;
+                }
             }
 
             var input = parseResult.GetValue(inputArgument);
             var sonarqubeReport = parseResult.GetValue(sonarqubeReportOption);
             var continueOnError = parseResult.GetValue(continueOnErrorOption);
-            return await services.GetRequiredService<ValidatorRunner>().RunAsync(input!, sonarqubeReport, continueOnError, cancellationToken);
+            var runResult = await services.GetRequiredService<ValidatorRunner>().RunAsync(input!, sonarqubeReport, continueOnError, cancellationToken);
+
+            if (matchedRequiredPaths is not null)
+            {
+                // Last check: every required file must be referenced as a <File> in the .slnx.
+                var slnxFiles = services.GetRequiredService<ISlnxFileResolver>().Resolve(input!);
+                var slnxCheckResult = await RequiredFilesChecker.CheckInSlnxAsync(matchedRequiredPaths, slnxFiles);
+                if (slnxCheckResult != 0)
+                    return slnxCheckResult;
+            }
+
+            return runResult;
         });
 
         return await rootCommand.Parse(args).InvokeAsync();

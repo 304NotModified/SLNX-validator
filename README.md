@@ -67,7 +67,12 @@ Always exits with code `0`, even when validation errors are found. Useful in CI 
 
 ### `--required-files`
 
-Verify that a set of files or directories matching glob patterns exist before the tool runs. If any pattern produces no match, or if a matched path does not exist on disk, the tool exits with code `2`.
+Verify that a set of files or directories matching glob patterns exist before the tool runs **and** are referenced as `<File>` entries in the solution file(s) being validated. The check runs in two stages:
+
+1. **Pre-check** — the glob patterns must match at least one file on disk (runs before validation).
+2. **Last check** — every matched file must appear as a `<File Path="...">` element inside the `.slnx` file(s) (runs after validation). Relative paths in the solution file are resolved relative to the solution file's location.
+
+If either check fails, the tool exits with code `2`.
 
 **Syntax**
 
@@ -110,8 +115,8 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 
 | Code | Description |
 |------|-------------|
-| `0`  | All patterns matched and all matched paths exist on disk. |
-| `2`  | One or more patterns produced no matches, or a matched path does not exist on disk. |
+| `0`  | All patterns matched, all matched files exist on disk, and all are referenced in the solution. |
+| `2`  | A pattern produced no disk matches, or a matched file is not referenced as `<File>` in the solution. |
 
 ## SonarQube integration example
 
@@ -233,7 +238,7 @@ The following are **intentionally out of scope** because the toolchain already h
 | `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
 | `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
 | `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
-| `SLNX020` | `RequiredFilesNotFound`   | A `--required-files` pattern produced no matches, or a matched path does not exist on disk (exits with code `2`). |
+| `SLNX020` | `RequiredFilesNotFound`   | A `--required-files` pattern produced no disk matches, or a matched file is not referenced as `<File>` in the solution (exits with code `2`). |
 
 ## XSD Schema
 

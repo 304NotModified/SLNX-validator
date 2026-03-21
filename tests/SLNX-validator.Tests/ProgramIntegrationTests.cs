@@ -142,7 +142,7 @@ public class ProgramIntegrationTests
 
     [Test]
     [NotInParallel("CurrentDirectory")]
-    public async Task Invoke_WithRequiredFiles_AllMatch_ReturnsZeroExitCode()
+    public async Task Invoke_WithRequiredFiles_AllMatchAndReferencedInSlnx_ReturnsZeroExitCode()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
         Directory.CreateDirectory(tempDir);
@@ -153,12 +153,16 @@ public class ProgramIntegrationTests
         Directory.CreateDirectory(docDir);
 
         await File.WriteAllTextAsync(csprojPath, "<Project />");
+        await File.WriteAllTextAsync(Path.Combine(docDir, "readme.md"), "# Readme");
+        // The .slnx references doc/readme.md as a <File> so the last check passes.
         await File.WriteAllTextAsync(slnxPath, """
             <Solution>
               <Project Path="App.csproj" />
+              <Folder Name="docs">
+                <File Path="doc/readme.md" />
+              </Folder>
             </Solution>
             """);
-        await File.WriteAllTextAsync(Path.Combine(docDir, "readme.md"), "# Readme");
 
         try
         {
@@ -168,6 +172,47 @@ public class ProgramIntegrationTests
             {
                 var exitCode = await Program.Main([slnxPath, "--required-files", "doc/*.md"]);
                 exitCode.Should().Be(0);
+            }
+            finally
+            {
+                Environment.CurrentDirectory = previousDir;
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    [NotInParallel("CurrentDirectory")]
+    public async Task Invoke_WithRequiredFiles_MatchesButNotInSlnx_ReturnsTwoExitCode()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(tempDir);
+
+        var csprojPath = Path.Combine(tempDir, "App.csproj");
+        var slnxPath = Path.Combine(tempDir, "test.slnx");
+        var docDir = Path.Combine(tempDir, "doc");
+        Directory.CreateDirectory(docDir);
+
+        await File.WriteAllTextAsync(csprojPath, "<Project />");
+        await File.WriteAllTextAsync(Path.Combine(docDir, "readme.md"), "# Readme");
+        // The .slnx does NOT reference doc/readme.md — so the last check fails.
+        await File.WriteAllTextAsync(slnxPath, """
+            <Solution>
+              <Project Path="App.csproj" />
+            </Solution>
+            """);
+
+        try
+        {
+            var previousDir = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = tempDir;
+            try
+            {
+                var exitCode = await Program.Main([slnxPath, "--required-files", "doc/*.md"]);
+                exitCode.Should().Be(2);
             }
             finally
             {

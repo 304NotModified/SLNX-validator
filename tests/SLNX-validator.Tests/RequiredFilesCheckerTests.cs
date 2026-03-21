@@ -152,4 +152,117 @@ public class RequiredFilesCheckerTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Test]
+    public async Task CheckInSlnxAsync_RequiredFilePresentInSlnx_ReturnsZero()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            var docDir = Path.Combine(tempDir, "doc");
+            Directory.CreateDirectory(docDir);
+            var readmePath = Path.Combine(docDir, "readme.md");
+            await File.WriteAllTextAsync(readmePath, "# Readme");
+
+            var slnxPath = Path.Combine(tempDir, "solution.slnx");
+            await File.WriteAllTextAsync(slnxPath, """
+                <Solution>
+                  <Folder Name="docs">
+                    <File Path="doc/readme.md" />
+                  </Folder>
+                </Solution>
+                """);
+
+            var requiredAbsolutePaths = new[] { Path.GetFullPath(readmePath) };
+            var exitCode = await RequiredFilesChecker.CheckInSlnxAsync(requiredAbsolutePaths, [slnxPath]);
+
+            exitCode.Should().Be(0);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task CheckInSlnxAsync_RequiredFileMissingFromSlnx_ReturnsTwo()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            var docDir = Path.Combine(tempDir, "doc");
+            Directory.CreateDirectory(docDir);
+            var readmePath = Path.Combine(docDir, "readme.md");
+            await File.WriteAllTextAsync(readmePath, "# Readme");
+
+            var slnxPath = Path.Combine(tempDir, "solution.slnx");
+            await File.WriteAllTextAsync(slnxPath, """
+                <Solution>
+                  <Folder Name="docs">
+                    <File Path="doc/other.md" />
+                  </Folder>
+                </Solution>
+                """);
+
+            var requiredAbsolutePaths = new[] { Path.GetFullPath(readmePath) };
+            var exitCode = await RequiredFilesChecker.CheckInSlnxAsync(requiredAbsolutePaths, [slnxPath]);
+
+            exitCode.Should().Be(2);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task CheckInSlnxAsync_RelativePathsNormalisedCorrectly_ReturnsZero()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            var subDir = Path.Combine(tempDir, "sub");
+            Directory.CreateDirectory(subDir);
+            var docDir = Path.Combine(tempDir, "doc");
+            Directory.CreateDirectory(docDir);
+            var readmePath = Path.Combine(docDir, "readme.md");
+            await File.WriteAllTextAsync(readmePath, "# Readme");
+
+            // .slnx is in a subdirectory — path uses ".." to reach doc/readme.md
+            var slnxPath = Path.Combine(subDir, "solution.slnx");
+            await File.WriteAllTextAsync(slnxPath, """
+                <Solution>
+                  <Folder Name="docs">
+                    <File Path="../doc/readme.md" />
+                  </Folder>
+                </Solution>
+                """);
+
+            var requiredAbsolutePaths = new[] { Path.GetFullPath(readmePath) };
+            var exitCode = await RequiredFilesChecker.CheckInSlnxAsync(requiredAbsolutePaths, [slnxPath]);
+
+            exitCode.Should().Be(0);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task CheckInSlnxAsync_NoSlnxFiles_ReturnsTwoForEachRequired()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            var readmePath = Path.GetFullPath(Path.Combine(tempDir, "readme.md"));
+            var exitCode = await RequiredFilesChecker.CheckInSlnxAsync([readmePath], []);
+
+            exitCode.Should().Be(2);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }
