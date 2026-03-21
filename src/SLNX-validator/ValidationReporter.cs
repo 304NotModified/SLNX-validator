@@ -1,39 +1,70 @@
+using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
 internal static class ValidationReporter
 {
-    public static async Task Report(IReadOnlyList<FileValidationResult> results)
+    public static async Task Report(IReadOnlyList<FileValidationResult> results,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
     {
         foreach (var result in results)
         {
-            Console.WriteLine(result.HasErrors ? $"[FAIL] {result.File}" : $"[OK]   {result.File}");
+            var isFailingResult = result.Errors.Any(e => IsFailingError(e.Code, severityOverrides));
+            Console.WriteLine(isFailingResult ? $"[FAIL] {result.File}" : $"[OK]   {result.File}");
         }
 
-        var failedResults = results.Where(r => r.HasErrors).ToList();
+        var visibleResults = results
+            .Where(r => r.Errors.Any(e => IsVisible(e.Code, severityOverrides)))
+            .ToList();
 
-        if (failedResults.Count == 0)
+        if (visibleResults.Count == 0)
         {
             return;
         }
 
         Console.WriteLine();
 
-        foreach (var result in failedResults)
+        foreach (var result in visibleResults)
         {
             await Console.Error.WriteLineAsync(result.File);
 
-            foreach (var error in result.Errors)
+            foreach (var error in result.Errors.Where(e => IsVisible(e.Code, severityOverrides)))
             {
-                await Console.Error.WriteLineAsync(FormatError(error));
+                await Console.Error.WriteLineAsync(FormatError(error, severityOverrides));
             }
         }
     }
 
-    private static string FormatError(ValidationError error)
+    private static bool IsVisible(ValidationErrorCode code,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides) =>
+        overrides is null || !overrides.TryGetValue(code, out var severity) || severity is not null;
+
+    private static bool IsFailingError(ValidationErrorCode code,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+    {
+        if (overrides is not null && overrides.TryGetValue(code, out var severity))
+            return severity is SonarRuleSeverity.BLOCKER or SonarRuleSeverity.CRITICAL or SonarRuleSeverity.MAJOR;
+        return true; // default: all errors are failing
+    }
+
+    private static string FormatError(ValidationError error,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
     {
         var location = error.Line is null ? "" : $"line {error.Line}: ";
-        return $"  - {location}[{error.Code.ToCode()}] {error.Message}";
+        var label = GetSeverityLabel(error.Code, overrides);
+        return $"  - {location}[{error.Code.ToCode()}]{label} {error.Message}";
+    }
+
+    private static string GetSeverityLabel(ValidationErrorCode code,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+    {
+        if (overrides is null || !overrides.TryGetValue(code, out var severity)) return "";
+        return severity switch
+        {
+            SonarRuleSeverity.MINOR => " (warning)",
+            SonarRuleSeverity.INFO => " (info)",
+            _ => ""
+        };
     }
 }

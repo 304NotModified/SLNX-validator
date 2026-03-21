@@ -2,6 +2,7 @@ using JulianVerdurmen.SlnxValidator.Core;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
+using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
@@ -27,12 +28,21 @@ internal sealed class ValidatorRunner(ISlnxFileResolver resolver, ValidationColl
 
         var results = await collector.CollectAsync(files, requiredFilesOptions, cancellationToken);
 
-        await ValidationReporter.Report(results);
+        var overrides = options.SeverityOverrides;
+        await ValidationReporter.Report(results, overrides);
 
         if (options.SonarqubeReportPath is not null)
-            await sonarReporter.WriteReportAsync(results, options.SonarqubeReportPath);
+            await sonarReporter.WriteReportAsync(results, options.SonarqubeReportPath, overrides);
 
-        var hasErrors = results.Any(r => r.HasErrors);
+        var hasErrors = results.Any(r => r.Errors.Any(e => IsFailingError(e.Code, overrides)));
         return !options.ContinueOnError && hasErrors ? 1 : 0;
+    }
+
+    private static bool IsFailingError(ValidationErrorCode code,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+    {
+        if (overrides is not null && overrides.TryGetValue(code, out var severity))
+            return severity is SonarRuleSeverity.BLOCKER or SonarRuleSeverity.CRITICAL or SonarRuleSeverity.MAJOR;
+        return true; // default: all errors are failing
     }
 }
