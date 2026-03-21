@@ -1,4 +1,4 @@
-{
+﻿{
   "rules": [
     {
       "id": "SLNX001",
@@ -104,6 +104,36 @@
           "severity": "MEDIUM"
         }
       ]
+    },
+    {
+      "id": "SLNX020",
+      "name": "Required file does not exist on the system",
+      "description": "A file required by '--required-files' does not exist on the file system.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
+    },
+    {
+      "id": "SLNX021",
+      "name": "Required file not referenced in solution",
+      "description": "A file required by '--required-files' exists on the file system but is not referenced as a <File> element in the solution.",
+      "engineId": "slnx-validator",
+      "cleanCodeAttribute": "COMPLETE",
+      "type": "BUG",
+      "severity": "MAJOR",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ]
     }
   ],
   "issues": [
@@ -174,6 +204,26 @@
         "filePath": "Solution.slnx",
         "textRange": {
           "startLine": 7
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX020",
+      "primaryLocation": {
+        "message": "Sample message for RequiredFileDoesntExistOnSystem",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 8
+        }
+      }
+    },
+    {
+      "ruleId": "SLNX021",
+      "primaryLocation": {
+        "message": "Sample message for RequiredFileNotReferencedInSolution",
+        "filePath": "Solution.slnx",
+        "textRange": {
+          "startLine": 9
         }
       }
     }

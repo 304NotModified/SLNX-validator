@@ -4,9 +4,13 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator validator)
+internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator validator, IRequiredFilesChecker requiredFilesChecker)
 {
-    public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(IReadOnlyList<string> files, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(
+        IReadOnlyList<string> files,
+        IReadOnlyList<string>? matchedRequiredPaths,
+        string? requiredFilesPattern,
+        CancellationToken cancellationToken)
     {
         var results = new List<FileValidationResult>(files.Count);
 
@@ -36,11 +40,27 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
             var directory = Path.GetDirectoryName(file)!;
             var result = await validator.ValidateAsync(content, directory, cancellationToken);
 
+            var allErrors = result.Errors.ToList();
+
+            if (matchedRequiredPaths is not null)
+            {
+                if (matchedRequiredPaths.Count == 0)
+                {
+                    allErrors.Add(new ValidationError(
+                        ValidationErrorCode.RequiredFileDoesntExistOnSystem,
+                        $"Required file does not exist on the system. No files matched: {requiredFilesPattern}"));
+                }
+                else
+                {
+                    allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matchedRequiredPaths, content, directory));
+                }
+            }
+
             results.Add(new FileValidationResult
             {
                 File = file,
-                HasErrors = !result.IsValid,
-                Errors = result.Errors,
+                HasErrors = allErrors.Count > 0,
+                Errors = allErrors,
             });
         }
 
@@ -63,3 +83,4 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
         return buffer[..bytesRead].Contains((byte)0);
     }
 }
+

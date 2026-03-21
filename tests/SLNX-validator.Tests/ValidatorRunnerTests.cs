@@ -7,11 +7,12 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidatorRunnerTests
 {
-    private static ValidatorRunner CreateRunner(IFileSystem fileSystem)
+    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null)
     {
-        var collector = new ValidationCollector(fileSystem, Substitute.For<ISlnxValidator>());
+        checker ??= Substitute.For<IRequiredFilesChecker>();
+        var collector = new ValidationCollector(fileSystem, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter);
+        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter, checker);
     }
 
     [Test]
@@ -19,7 +20,8 @@ public class ValidatorRunnerTests
     {
         var runner = CreateRunner(new MockFileSystem());
 
-        var exitCode = await runner.RunAsync("nonexistent.slnx", sonarqubeReportPath: null, continueOnError: false, CancellationToken.None);
+        var exitCode = await runner.RunAsync("nonexistent.slnx", sonarqubeReportPath: null, continueOnError: false,
+            requiredFilesPattern: null, workingDirectory: ".", CancellationToken.None);
 
         exitCode.Should().Be(1);
     }
@@ -29,7 +31,8 @@ public class ValidatorRunnerTests
     {
         var runner = CreateRunner(new MockFileSystem());
 
-        var exitCode = await runner.RunAsync("nonexistent.slnx", sonarqubeReportPath: null, continueOnError: true, CancellationToken.None);
+        var exitCode = await runner.RunAsync("nonexistent.slnx", sonarqubeReportPath: null, continueOnError: true,
+            requiredFilesPattern: null, workingDirectory: ".", CancellationToken.None);
 
         exitCode.Should().Be(0);
     }
@@ -39,7 +42,8 @@ public class ValidatorRunnerTests
     {
         var runner = CreateRunner(new MockFileSystem());
 
-        var exitCode = await runner.RunAsync("src/*.slnx", sonarqubeReportPath: null, continueOnError: false, CancellationToken.None);
+        var exitCode = await runner.RunAsync("src/*.slnx", sonarqubeReportPath: null, continueOnError: false,
+            requiredFilesPattern: null, workingDirectory: ".", CancellationToken.None);
 
         exitCode.Should().Be(1);
     }
@@ -49,8 +53,10 @@ public class ValidatorRunnerTests
     {
         var runner = CreateRunner(new MockFileSystem());
 
-        var exitCode = await runner.RunAsync("src/*.slnx", sonarqubeReportPath: null, continueOnError: true, CancellationToken.None);
+        var exitCode = await runner.RunAsync("src/*.slnx", sonarqubeReportPath: null, continueOnError: true,
+            requiredFilesPattern: null, workingDirectory: ".", CancellationToken.None);
 
         exitCode.Should().Be(0);
     }
 }
+

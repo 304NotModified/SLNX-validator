@@ -95,6 +95,16 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
             "The XML structure violates the .slnx schema.",
             SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
+        ValidationErrorCode.RequiredFileDoesntExistOnSystem => CreateRule(code,
+            "Required file does not exist on the system",
+            "A file required by '--required-files' does not exist on the file system.",
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+
+        ValidationErrorCode.RequiredFileNotReferencedInSolution => CreateRule(code,
+            "Required file not referenced in solution",
+            "A file required by '--required-files' exists on the file system but is not referenced as a <File> element in the solution.",
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
     };
 

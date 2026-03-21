@@ -67,12 +67,12 @@ Always exits with code `0`, even when validation errors are found. Useful in CI 
 
 ### `--required-files`
 
-Verify that a set of files or directories matching glob patterns exist before the tool runs **and** are referenced as `<File>` entries in the solution file(s) being validated. The check runs in two stages:
+Verify that a set of files or directories matching glob patterns exist on disk **and** are referenced as `<File>` entries in the solution file(s) being validated. Any failure is reported as a normal validation error (exit code `1`) that also appears in SonarQube reports.
 
-1. **Pre-check** — the glob patterns must match at least one file on disk (runs before validation).
-2. **Last check** — every matched file must appear as a `<File Path="...">` element inside the `.slnx` file(s) (runs after validation). Relative paths in the solution file are resolved relative to the solution file's location.
+- **Disk check** — if no files match the glob patterns, a `SLNX020` (`RequiredFileDoesntExistOnSystem`) error is added to the solution result.
+- **Reference check** — for each matched file that is not referenced as `<File Path="...">` in the `.slnx`, a `SLNX021` (`RequiredFileNotReferencedInSolution`) error is added. The error message shows the exact `<File>` element that should be added.
 
-If either check fails, the tool exits with code `2`.
+Relative paths in the `.slnx` are resolved relative to the solution file's location.
 
 **Syntax**
 
@@ -115,8 +115,8 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 
 | Code | Description |
 |------|-------------|
-| `0`  | All patterns matched, all matched files exist on disk, and all are referenced in the solution. |
-| `2`  | A pattern produced no disk matches, or a matched file is not referenced as `<File>` in the solution. |
+| `0`  | All patterns matched and all matched files are referenced in the solution. |
+| `1`  | One or more required files don't exist on disk or are not referenced in the solution (same as any other validation error). |
 
 ## SonarQube integration example
 
@@ -238,7 +238,8 @@ The following are **intentionally out of scope** because the toolchain already h
 | `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
 | `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
 | `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
-| `SLNX020` | `RequiredFilesNotFound`   | A `--required-files` pattern produced no disk matches, or a matched file is not referenced as `<File>` in the solution (exits with code `2`). |
+| `SLNX020` | `RequiredFileDoesntExistOnSystem`   | A `--required-files` pattern matched no files on the file system. |
+| `SLNX021` | `RequiredFileNotReferencedInSolution` | A `--required-files` matched file exists on disk but is not referenced as a `<File>` element in the solution. |
 
 ## XSD Schema
 
