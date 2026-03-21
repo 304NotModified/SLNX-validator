@@ -32,14 +32,14 @@ internal sealed class RequiredFilesChecker : IRequiredFilesChecker
     /// <inheritdoc />
     public IReadOnlyList<ValidationError> CheckInSlnx(
         IReadOnlyList<string> requiredAbsolutePaths,
-        SlnxFileRefs slnxFileRefs)
+        SlnxFile slnxFile)
     {
         var errors = new List<ValidationError>();
         foreach (var requiredPath in requiredAbsolutePaths)
         {
-            if (!slnxFileRefs.AbsoluteFilePaths.Contains(requiredPath, StringComparer.OrdinalIgnoreCase))
+            if (!slnxFile.Files.Contains(requiredPath, StringComparer.OrdinalIgnoreCase))
             {
-                var relativePath = Path.GetRelativePath(slnxFileRefs.SlnxDirectory, requiredPath).Replace('\\', '/');
+                var relativePath = Path.GetRelativePath(slnxFile.SlnxDirectory, requiredPath).Replace('\\', '/');
                 errors.Add(new ValidationError(
                     ValidationErrorCode.RequiredFileNotReferencedInSolution,
                     $"Required file is not referenced in the solution: {requiredPath}" +

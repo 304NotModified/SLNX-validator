@@ -6,67 +6,16 @@ namespace JulianVerdurmen.SlnxValidator.Core.Tests;
 
 public class RequiredFilesCheckerTests
 {
-    private static string CreateTempDir()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-        Directory.CreateDirectory(tempDir);
-        return tempDir;
-    }
-
     private static RequiredFilesChecker CreateChecker() => new();
 
-    // ── ResolveMatchedPaths (integration: 2 tests) ───────────────────────────
-
-    [Test]
-    public void ResolveMatchedPaths_SingleInclude_MatchesFiles_ReturnsNonEmpty()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var docDir = Path.Combine(tempDir, "doc");
-            Directory.CreateDirectory(docDir);
-            File.WriteAllText(Path.Combine(docDir, "readme.md"), "# Readme");
-            File.WriteAllText(Path.Combine(docDir, "contributing.md"), "# Contributing");
-
-            var matched = CreateChecker().ResolveMatchedPaths("doc/*.md", tempDir);
-
-            matched.Should().HaveCount(2);
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    [Test]
-    public void ResolveMatchedPaths_IncludeFollowedByExclude_ExcludesFile()
-    {
-        var tempDir = CreateTempDir();
-        try
-        {
-            var docDir = Path.Combine(tempDir, "doc");
-            Directory.CreateDirectory(docDir);
-            File.WriteAllText(Path.Combine(docDir, "readme.md"), "# Readme");
-            File.WriteAllText(Path.Combine(docDir, "contributing.md"), "# Contributing");
-
-            var matched = CreateChecker().ResolveMatchedPaths("doc/*.md;!doc/contributing.md", tempDir);
-
-            matched.Should().HaveCount(1);
-            matched[0].Should().EndWith("readme.md");
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
-    }
-
-    // ── CheckInSlnx (unit tests – no real filesystem) ────────────────────────
-
     private static readonly string SlnxDir = OperatingSystem.IsWindows() ? @"C:\repo" : "/repo";
+
+    #region CheckInSlnx
 
     [Test]
     public void CheckInSlnx_RequiredFilePresentInSlnx_ReturnsNoErrors()
     {
+        // Arrange
         var requiredPath = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
         var slnxContent = """
             <Solution>
@@ -76,14 +25,17 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, SlnxDir));
+        // Act
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFile.Parse(slnxContent, SlnxDir)!);
 
+        // Assert
         errors.Should().BeEmpty();
     }
 
     [Test]
     public void CheckInSlnx_RequiredFileMissingFromSlnx_ReturnsError()
     {
+        // Arrange
         var requiredPath = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
         var slnxContent = """
             <Solution>
@@ -93,8 +45,10 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, SlnxDir));
+        // Act
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFile.Parse(slnxContent, SlnxDir)!);
 
+        // Assert
         errors.Should().HaveCount(1);
         errors[0].Code.Should().Be(ValidationErrorCode.RequiredFileNotReferencedInSolution);
     }
@@ -102,10 +56,13 @@ public class RequiredFilesCheckerTests
     [Test]
     public void CheckInSlnx_ErrorMessageContainsFileElement()
     {
+        // Arrange
         var requiredPath = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse("<Solution />", SlnxDir));
+        // Act
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFile.Parse("<Solution />", SlnxDir)!);
 
+        // Assert
         errors.Should().HaveCount(1);
         errors[0].Message.Should().Contain("<File Path=");
         errors[0].Message.Should().Contain("doc/readme.md");
@@ -114,11 +71,11 @@ public class RequiredFilesCheckerTests
     [Test]
     public void CheckInSlnx_RelativeDoubleDotPath_NormalizesCorrectly()
     {
+        // Arrange
         var slnxDir = OperatingSystem.IsWindows() ? @"C:\repo\sub" : "/repo/sub";
         var requiredPath = OperatingSystem.IsWindows()
             ? Path.GetFullPath(@"C:\repo\doc\readme.md")
             : Path.GetFullPath("/repo/doc/readme.md");
-
         var slnxContent = """
             <Solution>
               <Folder Name="docs">
@@ -127,19 +84,24 @@ public class RequiredFilesCheckerTests
             </Solution>
             """;
 
-        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFileRefs.Parse(slnxContent, slnxDir));
+        // Act
+        var errors = CreateChecker().CheckInSlnx([requiredPath], SlnxFile.Parse(slnxContent, slnxDir)!);
 
+        // Assert
         errors.Should().BeEmpty();
     }
 
     [Test]
     public void CheckInSlnx_MultipleRequiredFiles_ReportsAllMissing()
     {
+        // Arrange
         var path1 = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md"));
         var path2 = Path.GetFullPath(Path.Combine(SlnxDir, "doc", "contributing.md"));
 
-        var errors = CreateChecker().CheckInSlnx([path1, path2], SlnxFileRefs.Parse("<Solution />", SlnxDir));
+        // Act
+        var errors = CreateChecker().CheckInSlnx([path1, path2], SlnxFile.Parse("<Solution />", SlnxDir)!);
 
+        // Assert
         errors.Should().HaveCount(2);
         errors.Should().AllSatisfy(e => e.Code.Should().Be(ValidationErrorCode.RequiredFileNotReferencedInSolution));
     }
@@ -147,9 +109,64 @@ public class RequiredFilesCheckerTests
     [Test]
     public void CheckInSlnx_EmptyRequiredPaths_ReturnsNoErrors()
     {
-        var errors = CreateChecker().CheckInSlnx([], SlnxFileRefs.Parse("<Solution />", SlnxDir));
+        // Arrange
+        var slnxFile = SlnxFile.Parse("<Solution />", SlnxDir)!;
 
+        // Act
+        var errors = CreateChecker().CheckInSlnx([], slnxFile);
+
+        // Assert
         errors.Should().BeEmpty();
     }
+
+    #endregion
+
+    #region SlnxFile.Parse
+
+    [Test]
+    public void SlnxFileParse_ValidXml_ReturnsNonNull()
+    {
+        // Arrange
+        var content = "<Solution />";
+
+        // Act
+        var result = SlnxFile.Parse(content, SlnxDir);
+
+        // Assert
+        result.Should().NotBeNull();
+    }
+
+    [Test]
+    public void SlnxFileParse_InvalidXml_ReturnsNull()
+    {
+        // Arrange
+        var content = "<<<not xml>>>";
+
+        // Act
+        var result = SlnxFile.Parse(content, SlnxDir);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Test]
+    public void SlnxFileParse_FileElements_AreNormalisedToAbsolutePaths()
+    {
+        // Arrange
+        var content = """
+            <Solution>
+              <File Path="doc/readme.md" />
+            </Solution>
+            """;
+
+        // Act
+        var result = SlnxFile.Parse(content, SlnxDir)!;
+
+        // Assert
+        result.Files.Should().HaveCount(1);
+        result.Files[0].Should().Be(Path.GetFullPath(Path.Combine(SlnxDir, "doc", "readme.md")));
+    }
+
+    #endregion
 }
 

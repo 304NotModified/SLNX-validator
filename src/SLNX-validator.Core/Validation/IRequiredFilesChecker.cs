@@ -12,11 +12,11 @@ public interface IRequiredFilesChecker
 
     /// <summary>
     /// Checks which of the <paramref name="requiredAbsolutePaths"/> are NOT present in
-    /// <paramref name="slnxFileRefs"/>.
+    /// <paramref name="slnxFile"/>.
     /// Returns a <see cref="ValidationError"/> for each missing file.
     /// </summary>
     IReadOnlyList<ValidationError> CheckInSlnx(
         IReadOnlyList<string> requiredAbsolutePaths,
-        SlnxFileRefs slnxFileRefs);
+        SlnxFile slnxFile);
 }
 

@@ -52,8 +52,9 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
                 }
                 else
                 {
-                    var slnxFileRefs = SlnxFileRefs.Parse(content, directory);
-                    allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFileRefs));
+                    var slnxFile = SlnxFile.Parse(content, directory);
+                    if (slnxFile is not null)
+                        allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFile));
                 }
             }
 
