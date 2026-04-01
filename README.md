@@ -138,7 +138,7 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     }
