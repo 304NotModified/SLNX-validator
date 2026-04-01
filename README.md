@@ -161,7 +161,9 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 Then configure the SonarQube scanner:
 
 ```properties
-sonar.externalIssuesReportPaths=sonar-issues.json
+sonar.externalIssuesReportPaths=$(Build.ArtifactStagingDirectory)/slnx-sonar-issues.json
+sonar.sources=${{ parameters.slnPath }}
+sonar.xml.file.suffixes=.xml,.xsd,.xsl,.slnx
 ```
 
 ## Example output
