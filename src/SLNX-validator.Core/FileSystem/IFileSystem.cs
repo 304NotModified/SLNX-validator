@@ -9,4 +9,5 @@ public interface IFileSystem
     Stream CreateFile(string path);
     Stream OpenRead(string path);
     Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default);
+    long GetFileSize(string path);
 }
