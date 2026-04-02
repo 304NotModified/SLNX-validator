@@ -6,7 +6,7 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(ISlnxFileResolver resolver, ValidationCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker)
+internal sealed class ValidatorRunner(ISlnxFileResolver resolver, ValidationCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
 {
     public async Task<int> RunAsync(ValidatorRunnerOptions options, CancellationToken cancellationToken)
     {
@@ -32,7 +32,11 @@ internal sealed class ValidatorRunner(ISlnxFileResolver resolver, ValidationColl
         await ValidationReporter.Report(results, overrides);
 
         if (options.SonarqubeReportPath is not null)
+        {
             await sonarReporter.WriteReportAsync(results, options.SonarqubeReportPath, overrides);
+            var size = fileSystem.GetFileSize(options.SonarqubeReportPath);
+            Console.WriteLine($"SonarQube report written to: {options.SonarqubeReportPath} ({size} bytes)");
+        }
 
         var hasErrors = results.Any(r => r.Errors.Any(e => IsFailingError(e.Code, overrides)));
         return !options.ContinueOnError && hasErrors ? 1 : 0;

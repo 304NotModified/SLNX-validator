@@ -190,7 +190,7 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     }
@@ -213,7 +213,11 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 Then configure the SonarQube scanner:
 
 ```properties
-sonar.externalIssuesReportPaths=sonar-issues.json
+sonar.externalIssuesReportPaths=$(Build.ArtifactStagingDirectory)/slnx-sonar-issues.json
+# Required: without this, .slnx files are not visible to SonarQube
+sonar.sources=${{ parameters.slnPath }}
+# Required: enables syntax highlighting and XML rules for .slnx files in SonarQube
+sonar.xml.file.suffixes=.xml,.xsd,.xsl,.slnx
 ```
 
 ## Example output

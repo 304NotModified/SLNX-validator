@@ -13,7 +13,7 @@ public class ValidatorRunnerTests
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var collector = new ValidationCollector(fileSystem, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter, checker);
+        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter, checker, fileSystem);
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
@@ -35,7 +35,7 @@ public class ValidatorRunnerTests
         var sonarReporter = new SonarReporter(fileSystem);
         var resolver = Substitute.For<ISlnxFileResolver>();
         resolver.Resolve(Arg.Any<string>()).Returns([slnxPath]);
-        return new ValidatorRunner(resolver, collector, sonarReporter, checker);
+        return new ValidatorRunner(resolver, collector, sonarReporter, checker, fileSystem);
     }
 
     #region RunAsync – file resolution

@@ -13,12 +13,10 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
 
-    <VersionPrefix>0.4.0</VersionPrefix>
+    <VersionPrefix>0.5.0</VersionPrefix>
     <PackageReleaseNotes>
-	
-- Added --required-files CLI argument with glob pattern matching
-- Changed assembly file names
-
+* feat: log SQ report file path and size to console after generation  in https://github.com/304NotModified/SLNX-validator/pull/47
+* chore: change SonarQube impact severity from HIGH to MEDIUM by  in https://github.com/304NotModified/SLNX-validator/pull/49
 	</PackageReleaseNotes>
   </PropertyGroup>
 

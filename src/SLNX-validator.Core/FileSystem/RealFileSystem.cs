@@ -11,4 +11,5 @@ public sealed class RealFileSystem : IFileSystem
     public Stream OpenRead(string path) => File.OpenRead(path);
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default) =>
         File.ReadAllTextAsync(path, cancellationToken);
+    public long GetFileSize(string path) => new FileInfo(path).Length;
 }

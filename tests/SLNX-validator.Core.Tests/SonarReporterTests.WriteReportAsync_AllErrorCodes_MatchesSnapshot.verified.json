@@ -11,7 +11,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -26,7 +26,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -41,7 +41,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -56,7 +56,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -71,7 +71,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -86,7 +86,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -116,7 +116,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     },
@@ -131,7 +131,7 @@
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
+          "severity": "MEDIUM"
         }
       ]
     }

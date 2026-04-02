@@ -23,4 +23,6 @@ internal sealed class MockFileSystem(params string[] existingPaths) : IFileSyste
     public Stream OpenRead(string path) => new MemoryStream(Encoding.UTF8.GetBytes(""));
     public Task<string> ReadAllTextAsync(string path, CancellationToken cancellationToken = default) =>
         Task.FromResult("");
+    public long GetFileSize(string path) =>
+        CreatedFiles.TryGetValue(path, out var ms) ? ms.Length : 0;
 }

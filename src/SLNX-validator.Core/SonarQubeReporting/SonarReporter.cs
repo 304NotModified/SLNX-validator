@@ -79,32 +79,32 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
         ValidationErrorCode.FileNotFound => CreateRule(code,
             "Input file not found",
             "The specified .slnx file does not exist.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.InvalidExtension => CreateRule(code,
             "Invalid file extension",
             "The input file does not have a .slnx extension.",
-            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.CONVENTIONAL, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.CONVENTIONAL, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.NotATextFile => CreateRule(code,
             "File is not a text file",
             "The file is binary and cannot be parsed as XML.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.InvalidXml => CreateRule(code,
             "Invalid XML",
             "The .slnx file is not valid XML.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.ReferencedFileNotFound => CreateRule(code,
             "Referenced file not found",
             "A file referenced in a <File Path=\"...\"> element does not exist on disk.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.InvalidWildcardUsage => CreateRule(code,
             "Invalid wildcard usage",
             "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported.",
-            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MINOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.XsdViolation => CreateRule(code,
             "XSD schema violation",
@@ -114,12 +114,12 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
         ValidationErrorCode.RequiredFileDoesntExistOnSystem => CreateRule(code,
             "Required file does not exist on the system",
             "A file required by '--required-files' does not exist on the file system.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         ValidationErrorCode.RequiredFileNotReferencedInSolution => CreateRule(code,
             "Required file not referenced in solution",
             "A file required by '--required-files' exists on the file system but is not referenced as a <File> element in the solution.",
-            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.HIGH),
+            SonarRuleType.BUG, SonarRuleSeverity.MAJOR, SonarCleanCodeAttribute.COMPLETE, SonarImpactSeverity.MEDIUM),
 
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
     };
