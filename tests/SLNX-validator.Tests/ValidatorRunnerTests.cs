@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
@@ -31,7 +30,7 @@ public class ValidatorRunnerTests
             [slnxPath] = slnxContent
         });
         var validator = Substitute.For<ISlnxValidator>();
-        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        validator.ValidateAsync(Arg.Any<SlnxFile>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
         var resolver = Substitute.For<ISlnxFileResolver>();
         resolver.Resolve(Arg.Any<string>()).Returns([slnxPath]);

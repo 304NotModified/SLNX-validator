@@ -53,7 +53,8 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fi
                 continue;
             }
 
-            var validationResult = await validator.ValidateAsync(doc, directory, cancellationToken);
+            var slnxFile = SlnxFile.FromDocument(doc, content, directory);
+            var validationResult = await validator.ValidateAsync(slnxFile, cancellationToken);
             var allErrors = validationResult.Errors.ToList();
 
             if (requiredFilesOptions is not null)
@@ -70,7 +71,6 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fi
                     var hasXsdErrors = allErrors.Any(e => e.Code == ValidationErrorCode.XsdViolation);
                     if (!hasXsdErrors)
                     {
-                        var slnxFile = SlnxFile.FromDocument(doc, directory);
                         allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFile));
                     }
                 }

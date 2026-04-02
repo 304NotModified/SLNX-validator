@@ -7,31 +7,25 @@ namespace JulianVerdurmen.SlnxValidator.Core.Validation;
 
 internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdValidator) : ISlnxValidator
 {
-    /// <summary>
-    /// Validates a .slnx file against the XSD schema and checks that all referenced files exist on disk.
-    /// </summary>
-    /// <param name="doc">The already-parsed XML document (with line info).</param>
-    /// <param name="slnxDirectory">The directory that contains the .slnx file, used to resolve relative paths.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<ValidationResult> ValidateAsync(XDocument doc, string slnxDirectory, CancellationToken cancellationToken = default)
+    public async Task<ValidationResult> ValidateAsync(SlnxFile slnxFile, CancellationToken cancellationToken = default)
     {
         var result = new ValidationResult();
 
-        await xsdValidator.ValidateAsync(doc.ToString(SaveOptions.DisableFormatting), result, cancellationToken);
+        await xsdValidator.ValidateAsync(slnxFile.OriginalContent, result, cancellationToken);
 
         if (!result.IsValid)
         {
             return result;
         }
 
-        ValidatePaths(doc, slnxDirectory, result);
+        ValidatePaths(slnxFile, result);
 
         return result;
     }
 
-    private void ValidatePaths(XDocument doc, string slnxDirectory, ValidationResult result)
+    private void ValidatePaths(SlnxFile slnxFile, ValidationResult result)
     {
-        foreach (var file in doc.Descendants("File"))
+        foreach (var file in slnxFile.Document.Descendants("File"))
         {
             var path = file.Attribute("Path")!.Value;
             var lineInfo = (IXmlLineInfo)file;
@@ -47,7 +41,7 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
 
             var fullPath = Path.IsPathRooted(path)
                 ? path
-                : Path.Combine(slnxDirectory, path);
+                : Path.Combine(slnxFile.SlnxDirectory, path);
 
             if (!fileSystem.FileExists(fullPath))
             {

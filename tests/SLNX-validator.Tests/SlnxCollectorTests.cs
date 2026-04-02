@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
@@ -18,7 +17,7 @@ public class SlnxCollectorTests
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var validator = Substitute.For<ISlnxValidator>();
-        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        validator.ValidateAsync(Arg.Any<SlnxFile>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
         {
@@ -126,7 +125,7 @@ public class SlnxCollectorTests
         results[0].HasErrors.Should().BeTrue();
         results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.InvalidXml);
         results[0].Errors[0].Message.Should().Contain("Invalid XML");
-        await validator.DidNotReceive().ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await validator.DidNotReceive().ValidateAsync(Arg.Any<SlnxFile>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
