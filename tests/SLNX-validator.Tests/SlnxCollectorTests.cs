@@ -1,28 +1,31 @@
 using AwesomeAssertions;
+using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 using NSubstitute;
 
 namespace JulianVerdurmen.SlnxValidator.Tests;
 
-public class ValidationCollectorTests
+public class SlnxCollectorTests
 {
     private const string SlnxPath = "/fake/test.slnx";
     private const string SlnxContent = "<Solution />";
 
-    private static (ValidationCollector collector, IRequiredFilesChecker checker) CreateCollector(
+    private static (SlnxCollector collector, IRequiredFilesChecker checker) CreateCollector(
         string? slnxContent = SlnxContent,
         IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var validator = Substitute.For<ISlnxValidator>();
-        validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        validator.ValidateAsync(Arg.Any<SlnxFile>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
         {
             [SlnxPath] = slnxContent ?? ""
         });
-        return (new ValidationCollector(fileSystem, validator, checker), checker);
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        resolver.Resolve(Arg.Any<string>()).Returns([SlnxPath]);
+        return (new SlnxCollector(fileSystem, resolver, validator, checker), checker);
     }
 
     #region CollectAsync
@@ -35,7 +38,7 @@ public class ValidationCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [], Pattern: "*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -57,7 +60,7 @@ public class ValidationCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -78,7 +81,7 @@ public class ValidationCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -92,7 +95,7 @@ public class ValidationCollectorTests
         var (collector, checker) = CreateCollector();
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], requiredFilesOptions: null, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, requiredFilesOptions: null, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -100,7 +103,30 @@ public class ValidationCollectorTests
         checker.DidNotReceive().CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<SlnxFile>());
     }
 
+    [Test]
+    public async Task CollectAsync_InvalidXml_ReturnsInvalidXmlError()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem(new Dictionary<string, string>
+        {
+            [SlnxPath] = "this is not xml at all"
+        });
+        var validator = Substitute.For<ISlnxValidator>();
+        var checker = Substitute.For<IRequiredFilesChecker>();
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        resolver.Resolve(Arg.Any<string>()).Returns([SlnxPath]);
+        var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
+
+        // Act
+        var results = await collector.CollectAsync(SlnxPath, requiredFilesOptions: null, CancellationToken.None);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeTrue();
+        results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.InvalidXml);
+        results[0].Errors[0].Message.Should().Contain("Invalid XML");
+        await validator.DidNotReceive().ValidateAsync(Arg.Any<SlnxFile>(), Arg.Any<CancellationToken>());
+    }
+
     #endregion
 }
-
-

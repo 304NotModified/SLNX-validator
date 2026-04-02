@@ -11,12 +11,20 @@ public sealed class SlnxFile
     /// <summary>The directory that contains the .slnx file.</summary>
     public string SlnxDirectory { get; }
 
+    /// <summary>The raw XML content of the .slnx file.</summary>
+    public string OriginalContent { get; }
+
+    /// <summary>The parsed XML document (with line info).</summary>
+    public XDocument Document { get; }
+
     /// <summary>Absolute, normalised paths for every <c>&lt;File&gt;</c> entry in the solution.</summary>
     public IReadOnlyList<string> Files { get; }
 
-    private SlnxFile(string slnxDirectory, IReadOnlyList<string> files)
+    private SlnxFile(string slnxDirectory, string originalContent, XDocument document, IReadOnlyList<string> files)
     {
         SlnxDirectory = slnxDirectory;
+        OriginalContent = originalContent;
+        Document = document;
         Files = files;
     }
 
@@ -31,13 +39,18 @@ public sealed class SlnxFile
         XDocument doc;
         try
         {
-            doc = XDocument.Parse(slnxContent);
+            doc = XDocument.Parse(slnxContent, LoadOptions.SetLineInfo);
         }
         catch (Exception)
         {
             return null;
         }
 
+        return FromDocument(doc, slnxContent, slnxDirectory);
+    }
+
+    public static SlnxFile FromDocument(XDocument doc, string originalContent, string slnxDirectory)
+    {
         var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var fileElement in doc.Descendants("File"))
         {
@@ -52,6 +65,6 @@ public sealed class SlnxFile
             refs.Add(fullPath);
         }
 
-        return new SlnxFile(slnxDirectory, [.. refs]);
+        return new SlnxFile(slnxDirectory, originalContent, doc, [.. refs]);
     }
 }
