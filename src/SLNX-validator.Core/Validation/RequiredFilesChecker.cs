@@ -51,4 +51,3 @@ internal sealed class RequiredFilesChecker : IRequiredFilesChecker
     }
 }
 
-
