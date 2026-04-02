@@ -22,8 +22,6 @@ internal static class ValidationReporter
 
         foreach (var result in failedResults)
         {
-            await Console.Error.WriteLineAsync(result.File);
-
             foreach (var error in result.Errors)
             {
                 await Console.Error.WriteLineAsync(FormatError(error));
