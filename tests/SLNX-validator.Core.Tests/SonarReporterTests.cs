@@ -9,10 +9,12 @@ public class SonarReporterTests
 {
     private static SonarReporter CreateReporter() => new(new MockFileSystem());
 
-    private static async Task<JsonDocument> WriteAndReadReportAsync(IReadOnlyList<FileValidationResult> results)
+    private static async Task<JsonDocument> WriteAndReadReportAsync(
+        IReadOnlyList<FileValidationResult> results,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
     {
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(results, stream, severityOverrides);
         return JsonDocument.Parse(stream.ToArray());
     }
 
@@ -219,4 +221,92 @@ public class SonarReporterTests
 
         fileSystem.CreatedDirectories.Should().BeEmpty();
     }
+
+    #region WriteReportAsync – severity overrides
+
+    [Test]
+    public async Task WriteReportAsync_SeverityOverride_ReflectedInRuleDefinition()
+    {
+        // Arrange
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "test.slnx",
+                HasErrors = true,
+                Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
+            }
+        };
+        var overrides = new Dictionary<ValidationErrorCode, SonarRuleSeverity?>
+        {
+            [ValidationErrorCode.ReferencedFileNotFound] = SonarRuleSeverity.MINOR
+        };
+
+        // Act
+        using var doc = await WriteAndReadReportAsync(results, overrides);
+
+        // Assert
+        doc.RootElement.GetProperty("rules")[0]
+            .GetProperty("severity").GetString().Should().Be("MINOR");
+    }
+
+    [Test]
+    public async Task WriteReportAsync_IgnoredCode_NotInRulesOrIssues()
+    {
+        // Arrange
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "test.slnx",
+                HasErrors = true,
+                Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
+            }
+        };
+        var overrides = new Dictionary<ValidationErrorCode, SonarRuleSeverity?>
+        {
+            [ValidationErrorCode.ReferencedFileNotFound] = null
+        };
+
+        // Act
+        using var doc = await WriteAndReadReportAsync(results, overrides);
+
+        // Assert
+        doc.RootElement.GetProperty("rules").GetArrayLength().Should().Be(0);
+        doc.RootElement.GetProperty("issues").GetArrayLength().Should().Be(0);
+    }
+
+    [Test]
+    public async Task WriteReportAsync_IgnoreAllButOne_OnlyVisibleCodeInReport()
+    {
+        // Arrange
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "test.slnx",
+                HasErrors = true,
+                Errors =
+                [
+                    new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found"),
+                    new ValidationError(ValidationErrorCode.XsdViolation, "Schema error", Line: 2),
+                ]
+            }
+        };
+        // Ignore all codes, but make SLNX013 (XsdViolation) MAJOR
+        var overrides = Enum.GetValues<ValidationErrorCode>()
+            .ToDictionary(c => c, _ => (SonarRuleSeverity?)null);
+        overrides[ValidationErrorCode.XsdViolation] = SonarRuleSeverity.MAJOR;
+
+        // Act
+        using var doc = await WriteAndReadReportAsync(results, overrides);
+
+        // Assert
+        doc.RootElement.GetProperty("rules").GetArrayLength().Should().Be(1);
+        doc.RootElement.GetProperty("rules")[0].GetProperty("id").GetString().Should().Be("SLNX013");
+        doc.RootElement.GetProperty("issues").GetArrayLength().Should().Be(1);
+        doc.RootElement.GetProperty("issues")[0].GetProperty("ruleId").GetString().Should().Be("SLNX013");
+    }
+
+    #endregion
 }

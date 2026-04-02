@@ -1,6 +1,6 @@
 namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
-internal enum SonarRuleSeverity
+public enum SonarRuleSeverity
 {
     BLOCKER,
     CRITICAL,

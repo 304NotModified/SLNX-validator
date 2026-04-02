@@ -28,12 +28,48 @@ public static class Program
             Description = "Semicolon-separated glob patterns for files that must exist on disk and be referenced as <File> elements in the solution."
         };
 
+        var blockerOption = new Option<string?>("--blocker")
+        {
+            Description = "Comma-separated codes (or * for all) to treat as BLOCKER severity (causes exit code 1)."
+        };
+
+        var criticalOption = new Option<string?>("--critical")
+        {
+            Description = "Comma-separated codes (or * for all) to treat as CRITICAL severity (causes exit code 1)."
+        };
+
+        var majorOption = new Option<string?>("--major")
+        {
+            Description = "Comma-separated codes (or * for all) to treat as MAJOR severity (causes exit code 1)."
+        };
+
+        var minorOption = new Option<string?>("--minor")
+        {
+            Description = "Comma-separated codes (or * for all) to treat as MINOR severity (shown, but does not cause exit code 1)."
+        };
+
+        var infoOption = new Option<string?>("--info")
+        {
+            Description = "Comma-separated codes (or * for all) to treat as INFO severity (shown, but does not cause exit code 1)."
+        };
+
+        var ignoreOption = new Option<string?>("--ignore")
+        {
+            Description = "Comma-separated codes (or * for all) to suppress entirely (not shown, not in SonarQube report)."
+        };
+
         var rootCommand = new RootCommand("Validates .slnx solution files.")
         {
             inputArgument,
             sonarqubeReportOption,
             continueOnErrorOption,
-            requiredFilesOption
+            requiredFilesOption,
+            blockerOption,
+            criticalOption,
+            majorOption,
+            minorOption,
+            infoOption,
+            ignoreOption
         };
 
         var services = new ServiceCollection()
@@ -49,7 +85,14 @@ public static class Program
                 SonarqubeReportPath: parseResult.GetValue(sonarqubeReportOption),
                 ContinueOnError: parseResult.GetValue(continueOnErrorOption),
                 RequiredFilesPattern: parseResult.GetValue(requiredFilesOption),
-                WorkingDirectory: Environment.CurrentDirectory);
+                WorkingDirectory: Environment.CurrentDirectory,
+                SeverityOverrides: SeverityOverridesParser.Parse(
+                    parseResult.GetValue(blockerOption),
+                    parseResult.GetValue(criticalOption),
+                    parseResult.GetValue(majorOption),
+                    parseResult.GetValue(minorOption),
+                    parseResult.GetValue(infoOption),
+                    parseResult.GetValue(ignoreOption)));
 
             return await services.GetRequiredService<ValidatorRunner>().RunAsync(options, cancellationToken);
         });
