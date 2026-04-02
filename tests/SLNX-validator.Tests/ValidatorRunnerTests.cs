@@ -152,7 +152,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: file with wrong extension generates SLNX002; --ignore * suppresses all codes
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, null, null, null, ignore: "*");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "*");
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -168,7 +168,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: --ignore SLNX002 suppresses the InvalidExtension error
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, null, null, null, ignore: "SLNX002");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "SLNX002");
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -184,7 +184,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: --minor SLNX002 downgrades InvalidExtension to non-failing severity
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, null, minor: "SLNX002", null, null);
+        var overrides = SeverityOverridesParser.Parse(null, null, null, minor: "SLNX002", null, null);
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -200,7 +200,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: --info * downgrades all codes to INFO (non-failing)
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, null, null, info: "*", null);
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, info: "*", null);
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -216,7 +216,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: --info * --major SLNX002  →  SLNX002 stays MAJOR (specific overrides wildcard)
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, major: "SLNX002", null, info: "*", null);
+        var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, info: "*", null);
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -232,7 +232,7 @@ public class ValidatorRunnerTests
     {
         // Arrange: --ignore * --major SLNX002  →  SLNX002 is MAJOR (specific wins over wildcard ignore)
         var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
-        var overrides = Program.ParseSeverityOverrides(null, null, major: "SLNX002", null, null, ignore: "*");
+        var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, null, ignore: "*");
 
         // Act
         var exitCode = await runner.RunAsync(

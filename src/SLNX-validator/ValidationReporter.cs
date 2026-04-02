@@ -31,7 +31,7 @@ internal static class ValidationReporter
 
             foreach (var error in result.Errors.Where(e => IsVisible(e.Code, severityOverrides)))
             {
-                await Console.Error.WriteLineAsync(FormatError(error, severityOverrides));
+                await Console.Error.WriteLineAsync(FormatError(error));
             }
         }
     }
@@ -48,23 +48,9 @@ internal static class ValidationReporter
         return true; // default: all errors are failing
     }
 
-    private static string FormatError(ValidationError error,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+    private static string FormatError(ValidationError error)
     {
         var location = error.Line is null ? "" : $"line {error.Line}: ";
-        var label = GetSeverityLabel(error.Code, overrides);
-        return $"  - {location}[{error.Code.ToCode()}]{label} {error.Message}";
-    }
-
-    private static string GetSeverityLabel(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
-    {
-        if (overrides is null || !overrides.TryGetValue(code, out var severity)) return "";
-        return severity switch
-        {
-            SonarRuleSeverity.MINOR => " (warning)",
-            SonarRuleSeverity.INFO => " (info)",
-            _ => ""
-        };
+        return $"  - {location}[{error.Code.ToCode()}] {error.Message}";
     }
 }
