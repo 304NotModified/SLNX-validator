@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 
 namespace JulianVerdurmen.SlnxValidator.Core.Tests;
@@ -12,7 +13,7 @@ public class RequiredFilesCheckerIntegrationTests
         return tempDir;
     }
 
-    private static RequiredFilesChecker CreateChecker() => new();
+    private static RequiredFilesChecker CreateChecker() => new(new RealFileSystem());
 
     #region ResolveMatchedPaths
 

@@ -24,6 +24,6 @@ public class SolutionIntegrationTests
         var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator(new SlnxXsdProvider()));
         var result = await validator.ValidateAsync(content, slnxFile.DirectoryName!);
 
-        result.Errors.Should().BeEmpty();
+        result.ValidationResult.Errors.Should().BeEmpty();
     }
 }

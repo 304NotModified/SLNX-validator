@@ -6,6 +6,8 @@ public sealed class RealFileSystem : IFileSystem
     public bool DirectoryExists(string path) => Directory.Exists(path);
     public IEnumerable<string> GetFiles(string directory, string searchPattern) =>
         Directory.GetFiles(directory, searchPattern);
+    public IEnumerable<string> GetDirectories(string directory) =>
+        Directory.GetDirectories(directory);
     public void CreateDirectory(string path) => Directory.CreateDirectory(path);
     public Stream CreateFile(string path) => File.Create(path);
     public Stream OpenRead(string path) => File.OpenRead(path);

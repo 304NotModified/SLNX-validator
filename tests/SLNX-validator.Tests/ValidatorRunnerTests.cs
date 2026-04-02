@@ -30,7 +30,7 @@ public class ValidatorRunnerTests
         });
         var validator = Substitute.For<ISlnxValidator>();
         validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ValidationResult());
+            .Returns(new SlnxValidationResult(new ValidationResult(), null));
         var collector = new ValidationCollector(fileSystem, validator, checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var resolver = Substitute.For<ISlnxFileResolver>();

@@ -13,7 +13,7 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
     /// <param name="slnxContent">The raw XML content of the .slnx file.</param>
     /// <param name="slnxDirectory">The directory that contains the .slnx file, used to resolve relative paths.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<ValidationResult> ValidateAsync(string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default)
+    public async Task<SlnxValidationResult> ValidateAsync(string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default)
     {
         var result = new ValidationResult();
 
@@ -25,19 +25,20 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
         catch (XmlException ex)
         {
             result.AddError(ValidationErrorCode.InvalidXml, $"Invalid XML: {ex.Message}", line: ex.LineNumber, column: ex.LinePosition);
-            return result;
+            return new SlnxValidationResult(result, null);
         }
 
         await xsdValidator.ValidateAsync(slnxContent, result, cancellationToken);
 
         if (!result.IsValid)
         {
-            return result;
+            return new SlnxValidationResult(result, null);
         }
 
+        var slnxFile = SlnxFile.FromDocument(doc, slnxDirectory);
         ValidatePaths(doc, slnxDirectory, result);
 
-        return result;
+        return new SlnxValidationResult(result, slnxFile);
     }
 
     private void ValidatePaths(XDocument doc, string slnxDirectory, ValidationResult result)

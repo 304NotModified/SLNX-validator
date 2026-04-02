@@ -21,7 +21,7 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeTrue();
+        result.ValidationResult.IsValid.Should().BeTrue();
     }
 
     [Test]
@@ -33,9 +33,9 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidXml);
-        result.Errors[0].Message.Should().Contain("Invalid XML");
+        result.ValidationResult.IsValid.Should().BeFalse();
+        result.ValidationResult.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidXml);
+        result.ValidationResult.Errors[0].Message.Should().Contain("Invalid XML");
     }
 
     [Test]
@@ -49,8 +49,8 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
+        result.ValidationResult.IsValid.Should().BeFalse();
+        result.ValidationResult.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
     }
 
     [Test]
@@ -65,8 +65,8 @@ public class SlnxValidatorTests
         // Path is use="required" in the XSD, so this is caught as an XSD violation
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
+        result.ValidationResult.IsValid.Should().BeFalse();
+        result.ValidationResult.Errors[0].Code.Should().Be(ValidationErrorCode.XsdViolation);
     }
 
     [Test]
@@ -82,9 +82,9 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors[0].Code.Should().Be(ValidationErrorCode.ReferencedFileNotFound);
-        result.Errors[0].Message.Should().Contain("README.md");
+        result.ValidationResult.IsValid.Should().BeFalse();
+        result.ValidationResult.Errors[0].Code.Should().Be(ValidationErrorCode.ReferencedFileNotFound);
+        result.ValidationResult.Errors[0].Message.Should().Contain("README.md");
     }
 
     [Test]
@@ -101,7 +101,7 @@ public class SlnxValidatorTests
         var result = await ValidatorWithFiles(Path.Combine(RepoRoot, "README.md"))
             .ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeTrue();
+        result.ValidationResult.IsValid.Should().BeTrue();
     }
 
     [Test]
@@ -118,8 +118,8 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.Errors.Should().HaveCount(2);
-        foreach (var error in result.Errors)
+        result.ValidationResult.Errors.Should().HaveCount(2);
+        foreach (var error in result.ValidationResult.Errors)
         {
             error.Code.Should().Be(ValidationErrorCode.ReferencedFileNotFound);
         }
@@ -138,9 +138,9 @@ public class SlnxValidatorTests
 
         var result = await ValidatorWithFiles().ValidateAsync(slnx, RepoRoot);
 
-        result.IsValid.Should().BeFalse();
-        result.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidWildcardUsage);
-        result.Errors[0].Message.Should().Contain("docs/*.md");
+        result.ValidationResult.IsValid.Should().BeFalse();
+        result.ValidationResult.Errors[0].Code.Should().Be(ValidationErrorCode.InvalidWildcardUsage);
+        result.ValidationResult.Errors[0].Message.Should().Contain("docs/*.md");
     }
 
     [Test]

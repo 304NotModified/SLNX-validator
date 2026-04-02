@@ -4,5 +4,5 @@ namespace JulianVerdurmen.SlnxValidator.Core.Validation;
 
 public interface ISlnxValidator
 {
-    Task<ValidationResult> ValidateAsync(string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default);
+    Task<SlnxValidationResult> ValidateAsync(string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default);
 }

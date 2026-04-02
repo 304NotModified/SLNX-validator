@@ -37,7 +37,8 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
 
             var content = await fileSystem.ReadAllTextAsync(file, cancellationToken);
             var directory = Path.GetDirectoryName(file)!;
-            var result = await validator.ValidateAsync(content, directory, cancellationToken);
+            var validationResult = await validator.ValidateAsync(content, directory, cancellationToken);
+            var result = validationResult.ValidationResult;
 
             var allErrors = result.Errors.ToList();
 
@@ -52,7 +53,7 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
                 }
                 else
                 {
-                    var slnxFile = SlnxFile.Parse(content, directory);
+                    var slnxFile = validationResult.ParsedFile;
                     if (slnxFile is not null)
                         allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFile));
                 }

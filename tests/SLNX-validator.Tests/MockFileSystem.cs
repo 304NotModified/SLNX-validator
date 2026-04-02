@@ -28,6 +28,7 @@ internal sealed class MockFileSystem : IFileSystem
     public bool FileExists(string path) => _existingPaths.Contains(path);
     public bool DirectoryExists(string path) => false;
     public IEnumerable<string> GetFiles(string directory, string searchPattern) => [];
+    public IEnumerable<string> GetDirectories(string directory) => [];
     public void CreateDirectory(string path) => CreatedDirectories.Add(path);
     public Stream CreateFile(string path)
     {

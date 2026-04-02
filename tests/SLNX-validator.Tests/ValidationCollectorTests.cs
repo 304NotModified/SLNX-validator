@@ -17,7 +17,7 @@ public class ValidationCollectorTests
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var validator = Substitute.For<ISlnxValidator>();
         validator.ValidateAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ValidationResult());
+            .Returns(new SlnxValidationResult(new ValidationResult(), SlnxFile.Parse(slnxContent ?? "", "")));
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
         {
             [SlnxPath] = slnxContent ?? ""
