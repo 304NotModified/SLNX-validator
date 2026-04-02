@@ -5,18 +5,10 @@ using JulianVerdurmen.SlnxValidator.Core.Validation;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(ISlnxFileResolver resolver, SlnxCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
+internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
 {
     public async Task<int> RunAsync(ValidatorRunnerOptions options, CancellationToken cancellationToken)
     {
-        var files = resolver.Resolve(options.Input);
-
-        if (files.Count == 0)
-        {
-            await Console.Error.WriteLineAsync($"No .slnx files found for input: {options.Input}");
-            return options.ContinueOnError ? 0 : 1;
-        }
-
         // Resolve required file glob patterns to absolute disk paths (once for all .slnx files).
         RequiredFilesOptions? requiredFilesOptions = null;
         if (options.RequiredFilesPattern is not null)
@@ -25,7 +17,13 @@ internal sealed class ValidatorRunner(ISlnxFileResolver resolver, SlnxCollector 
             requiredFilesOptions = new RequiredFilesOptions(matchedPaths, options.RequiredFilesPattern);
         }
 
-        var results = await collector.CollectAsync(files, requiredFilesOptions, cancellationToken);
+        var results = await collector.CollectAsync(options.Input, requiredFilesOptions, cancellationToken);
+
+        if (results.Count == 0)
+        {
+            await Console.Error.WriteLineAsync($"No .slnx files found for input: {options.Input}");
+            return options.ContinueOnError ? 0 : 1;
+        }
 
         await ValidationReporter.Report(results);
 

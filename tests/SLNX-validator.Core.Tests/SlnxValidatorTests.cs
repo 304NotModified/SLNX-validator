@@ -15,7 +15,7 @@ public class SlnxValidatorTests
     private static Task<ValidationResult> ValidateAsync(Validation.SlnxValidator validator, string slnx)
     {
         var doc = XDocument.Parse(slnx, LoadOptions.SetLineInfo);
-        return validator.ValidateAsync(doc, slnx, RepoRoot);
+        return validator.ValidateAsync(doc, RepoRoot);
     }
 
     [Test]

@@ -11,14 +11,13 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
     /// Validates a .slnx file against the XSD schema and checks that all referenced files exist on disk.
     /// </summary>
     /// <param name="doc">The already-parsed XML document (with line info).</param>
-    /// <param name="slnxContent">The raw XML content, required for stream-based XSD validation.</param>
     /// <param name="slnxDirectory">The directory that contains the .slnx file, used to resolve relative paths.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<ValidationResult> ValidateAsync(XDocument doc, string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default)
+    public async Task<ValidationResult> ValidateAsync(XDocument doc, string slnxDirectory, CancellationToken cancellationToken = default)
     {
         var result = new ValidationResult();
 
-        await xsdValidator.ValidateAsync(slnxContent, result, cancellationToken);
+        await xsdValidator.ValidateAsync(doc.ToString(SaveOptions.DisableFormatting), result, cancellationToken);
 
         if (!result.IsValid)
         {

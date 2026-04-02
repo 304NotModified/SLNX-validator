@@ -6,13 +6,14 @@ using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxValidator validator, IRequiredFilesChecker requiredFilesChecker)
+internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fileResolver, ISlnxValidator validator, IRequiredFilesChecker requiredFilesChecker)
 {
     public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(
-        IReadOnlyList<string> files,
+        string input,
         RequiredFilesOptions? requiredFilesOptions,
         CancellationToken cancellationToken)
     {
+        var files = fileResolver.Resolve(input);
         var results = new List<FileValidationResult>(files.Count);
 
         foreach (var file in files)
@@ -52,7 +53,7 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxValidator valid
                 continue;
             }
 
-            var validationResult = await validator.ValidateAsync(doc, content, directory, cancellationToken);
+            var validationResult = await validator.ValidateAsync(doc, directory, cancellationToken);
             var allErrors = validationResult.Errors.ToList();
 
             if (requiredFilesOptions is not null)

@@ -12,9 +12,10 @@ public class ValidatorRunnerTests
     private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
-        var collector = new SlnxCollector(fileSystem, Substitute.For<ISlnxValidator>(), checker);
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        var collector = new SlnxCollector(fileSystem, resolver, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(Substitute.For<ISlnxFileResolver>(), collector, sonarReporter, checker, fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, checker, fileSystem);
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
@@ -30,13 +31,13 @@ public class ValidatorRunnerTests
             [slnxPath] = slnxContent
         });
         var validator = Substitute.For<ISlnxValidator>();
-        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
-        var collector = new SlnxCollector(fileSystem, validator, checker);
-        var sonarReporter = new SonarReporter(fileSystem);
         var resolver = Substitute.For<ISlnxFileResolver>();
         resolver.Resolve(Arg.Any<string>()).Returns([slnxPath]);
-        return new ValidatorRunner(resolver, collector, sonarReporter, checker, fileSystem);
+        var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
+        var sonarReporter = new SonarReporter(fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, checker, fileSystem);
     }
 
     #region RunAsync – file resolution

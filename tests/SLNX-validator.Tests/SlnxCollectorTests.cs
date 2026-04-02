@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using AwesomeAssertions;
+using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 using NSubstitute;
@@ -17,13 +18,15 @@ public class SlnxCollectorTests
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var validator = Substitute.For<ISlnxValidator>();
-        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        validator.ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult());
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
         {
             [SlnxPath] = slnxContent ?? ""
         });
-        return (new SlnxCollector(fileSystem, validator, checker), checker);
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        resolver.Resolve(Arg.Any<string>()).Returns([SlnxPath]);
+        return (new SlnxCollector(fileSystem, resolver, validator, checker), checker);
     }
 
     #region CollectAsync
@@ -36,7 +39,7 @@ public class SlnxCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [], Pattern: "*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -58,7 +61,7 @@ public class SlnxCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -79,7 +82,7 @@ public class SlnxCollectorTests
         var options = new RequiredFilesOptions(MatchedPaths: [requiredFile], Pattern: "doc/*.md");
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], options, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -93,7 +96,7 @@ public class SlnxCollectorTests
         var (collector, checker) = CreateCollector();
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], requiredFilesOptions: null, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, requiredFilesOptions: null, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
@@ -111,17 +114,19 @@ public class SlnxCollectorTests
         });
         var validator = Substitute.For<ISlnxValidator>();
         var checker = Substitute.For<IRequiredFilesChecker>();
-        var collector = new SlnxCollector(fileSystem, validator, checker);
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        resolver.Resolve(Arg.Any<string>()).Returns([SlnxPath]);
+        var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
 
         // Act
-        var results = await collector.CollectAsync([SlnxPath], requiredFilesOptions: null, CancellationToken.None);
+        var results = await collector.CollectAsync(SlnxPath, requiredFilesOptions: null, CancellationToken.None);
 
         // Assert
         results.Should().HaveCount(1);
         results[0].HasErrors.Should().BeTrue();
         results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.InvalidXml);
         results[0].Errors[0].Message.Should().Contain("Invalid XML");
-        await validator.DidNotReceive().ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await validator.DidNotReceive().ValidateAsync(Arg.Any<XDocument>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     #endregion

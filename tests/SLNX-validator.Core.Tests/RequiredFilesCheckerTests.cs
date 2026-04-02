@@ -6,7 +6,7 @@ namespace JulianVerdurmen.SlnxValidator.Core.Tests;
 
 public class RequiredFilesCheckerTests
 {
-    private static RequiredFilesChecker CreateChecker() => new(new MockFileSystem());
+    private static RequiredFilesChecker CreateChecker() => new();
 
     private static readonly string SlnxDir = OperatingSystem.IsWindows() ? @"C:\repo" : "/repo";
 

@@ -41,10 +41,6 @@ public sealed class SlnxFile
         return FromDocument(doc, slnxDirectory);
     }
 
-    /// <summary>
-    /// Creates a <see cref="SlnxFile"/> from an already-parsed <see cref="XDocument"/>,
-    /// avoiding a second XML parse when the document is already available.
-    /// </summary>
     public static SlnxFile FromDocument(XDocument doc, string slnxDirectory)
     {
         var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
