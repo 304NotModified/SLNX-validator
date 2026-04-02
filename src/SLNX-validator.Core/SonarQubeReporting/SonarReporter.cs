@@ -17,29 +17,34 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath)
+    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
     {
         var directory = Path.GetDirectoryName(outputPath);
         if (!string.IsNullOrEmpty(directory))
             fileSystem.CreateDirectory(directory);
 
         await using var stream = fileSystem.CreateFile(outputPath);
-        await WriteReportAsync(results, stream);
+        await WriteReportAsync(results, stream, severityOverrides);
     }
 
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream)
+    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
     {
         var usedCodes = results
             .SelectMany(r => r.Errors)
             .Select(e => e.Code)
+            .Where(c => !IsIgnored(c, severityOverrides))
             .Distinct()
             .OrderBy(c => (int)c)
             .ToList();
 
-        var rules = usedCodes.Select(GetRuleDefinition).ToList();
+        var rules = usedCodes.Select(c => ApplyOverride(GetRuleDefinition(c), c, severityOverrides)).ToList();
 
         var issues = results
-            .SelectMany(r => r.Errors.Select(e => BuildIssue(r.File, e)))
+            .SelectMany(r => r.Errors
+                .Where(e => !IsIgnored(e.Code, severityOverrides))
+                .Select(e => BuildIssue(r.File, e)))
             .ToList();
 
         var report = new SonarReport { Rules = rules, Issues = issues };
@@ -57,6 +62,17 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
             TextRange = error.Line.HasValue ? new SonarTextRange { StartLine = error.Line.Value } : null
         }
     };
+
+    private static bool IsIgnored(ValidationErrorCode code, IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides) =>
+        overrides is not null && overrides.TryGetValue(code, out var severity) && severity is null;
+
+    private static SonarRule ApplyOverride(SonarRule rule, ValidationErrorCode code,
+        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+    {
+        if (overrides is not null && overrides.TryGetValue(code, out var severity) && severity.HasValue)
+            return rule with { Severity = severity.Value };
+        return rule;
+    }
 
     private static SonarRule GetRuleDefinition(ValidationErrorCode code) => code switch
     {

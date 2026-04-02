@@ -141,5 +141,108 @@ public class ValidatorRunnerTests
     }
 
     #endregion
+
+    #region RunAsync – severity overrides
+
+    // All severity override tests use a .xml file (not .slnx) to generate SLNX002 (InvalidExtension) errors,
+    // which allows testing severity override behavior with predictable validation output.
+
+    [Test]
+    public async Task RunAsync_IgnoreAllCodes_WithErrors_ReturnsZero()
+    {
+        // Arrange: file with wrong extension generates SLNX002; --ignore * suppresses all codes
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "*");
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(0);
+    }
+
+    [Test]
+    public async Task RunAsync_IgnoreSpecificCode_ThatCodeDoesNotCauseExitOne()
+    {
+        // Arrange: --ignore SLNX002 suppresses the InvalidExtension error
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "SLNX002");
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(0);
+    }
+
+    [Test]
+    public async Task RunAsync_MinorOverrideForErrorCode_ReturnsZero()
+    {
+        // Arrange: --minor SLNX002 downgrades InvalidExtension to non-failing severity
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, minor: "SLNX002", null, null);
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(0);
+    }
+
+    [Test]
+    public async Task RunAsync_InfoAllCodes_ReturnsZero()
+    {
+        // Arrange: --info * downgrades all codes to INFO (non-failing)
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, null, null, info: "*", null);
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(0);
+    }
+
+    [Test]
+    public async Task RunAsync_InfoAllCodesMajorSpecificCode_SpecificCodeCausesExitOne()
+    {
+        // Arrange: --info * --major SLNX002  →  SLNX002 stays MAJOR (specific overrides wildcard)
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, info: "*", null);
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(1);
+    }
+
+    [Test]
+    public async Task RunAsync_IgnoreAllCodesMajorSpecificCode_SpecificCodeCausesExitOne()
+    {
+        // Arrange: --ignore * --major SLNX002  →  SLNX002 is MAJOR (specific wins over wildcard ignore)
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, null, ignore: "*");
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            new ValidatorRunnerOptions("test.xml", null, false, null, ".", overrides),
+            CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(1);
+    }
+
+    #endregion
 }
 

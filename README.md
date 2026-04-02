@@ -118,6 +118,58 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 | `0`  | All patterns matched and all matched files are referenced in the solution. |
 | `1`  | Any validation error — including required files not existing or not referenced. |
 
+### Severity override flags
+
+Override the severity of specific validation codes, or suppress them entirely. This controls both the exit code behaviour and the severity written to the SonarQube JSON report.
+
+| Flag | Severity | Causes exit code `1`? |
+|------|----------|-----------------------|
+| `--blocker <codes>` | `BLOCKER` | ✅ yes |
+| `--critical <codes>` | `CRITICAL` | ✅ yes |
+| `--major <codes>` | `MAJOR` | ✅ yes (default for all codes) |
+| `--minor <codes>` | `MINOR` | ❌ no — shown with `(warning)` label |
+| `--info <codes>` | `INFO` | ❌ no — shown with `(info)` label |
+| `--ignore <codes>` | *(suppressed)* | ❌ no — not shown at all, not in SonarQube report |
+
+Each flag accepts a **comma-separated list of codes** or the **wildcard `*`** to match all codes:
+
+```powershell
+# Suppress a specific code
+slnx-validator MySolution.slnx --ignore SLNX011
+
+# Downgrade a code to non-failing severity
+slnx-validator MySolution.slnx --minor SLNX011,SLNX012
+
+# Set everything to INFO, but keep SLNX011 as MAJOR
+slnx-validator MySolution.slnx --info * --major SLNX011
+
+# Ignore everything except SLNX013
+slnx-validator MySolution.slnx --ignore * --major SLNX013
+```
+
+**Wildcard `*` and specific codes**
+
+When `*` is combined with specific code flags, **specific codes always win over the wildcard**, regardless of flag order:
+
+```powershell
+# SLNX011 remains MAJOR even though --info * is also specified
+slnx-validator MySolution.slnx --info * --major SLNX011
+```
+
+**Effect on SonarQube report**
+
+Severity overrides are reflected in the generated rule definition in the JSON report:
+
+```json
+{
+  "id": "SLNX011",
+  "severity": "MINOR",
+  ...
+}
+```
+
+Codes set to `--ignore` are excluded from both the `rules` and `issues` arrays entirely.
+
 ## SonarQube integration example
 
 ```powershell
