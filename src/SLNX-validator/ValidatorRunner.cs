@@ -5,7 +5,7 @@ using JulianVerdurmen.SlnxValidator.Core.Validation;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(ISlnxFileResolver resolver, ValidationCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
+internal sealed class ValidatorRunner(ISlnxFileResolver resolver, SlnxCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
 {
     public async Task<int> RunAsync(ValidatorRunnerOptions options, CancellationToken cancellationToken)
     {

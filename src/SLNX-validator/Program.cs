@@ -38,7 +38,7 @@ public static class Program
 
         var services = new ServiceCollection()
             .AddSlnxValidator()
-            .AddSingleton<ValidationCollector>()
+            .AddSingleton<SlnxCollector>()
             .AddSingleton<ValidatorRunner>()
             .BuildServiceProvider();
 

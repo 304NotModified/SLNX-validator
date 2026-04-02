@@ -1,10 +1,12 @@
+using System.Xml;
+using System.Xml.Linq;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator validator, IRequiredFilesChecker requiredFilesChecker)
+internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxValidator validator, IRequiredFilesChecker requiredFilesChecker)
 {
     public async Task<IReadOnlyList<FileValidationResult>> CollectAsync(
         IReadOnlyList<string> files,
@@ -37,10 +39,21 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
 
             var content = await fileSystem.ReadAllTextAsync(file, cancellationToken);
             var directory = Path.GetDirectoryName(file)!;
-            var validationResult = await validator.ValidateAsync(content, directory, cancellationToken);
-            var result = validationResult.ValidationResult;
 
-            var allErrors = result.Errors.ToList();
+            XDocument doc;
+            try
+            {
+                doc = XDocument.Parse(content, LoadOptions.SetLineInfo);
+            }
+            catch (XmlException ex)
+            {
+                results.Add(Error(file, ValidationErrorCode.InvalidXml, $"Invalid XML: {ex.Message}",
+                    line: ex.LineNumber, column: ex.LinePosition));
+                continue;
+            }
+
+            var validationResult = await validator.ValidateAsync(doc, content, directory, cancellationToken);
+            var allErrors = validationResult.Errors.ToList();
 
             if (requiredFilesOptions is not null)
             {
@@ -53,9 +66,12 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
                 }
                 else
                 {
-                    var slnxFile = validationResult.ParsedFile;
-                    if (slnxFile is not null)
+                    var hasXsdErrors = allErrors.Any(e => e.Code == ValidationErrorCode.XsdViolation);
+                    if (!hasXsdErrors)
+                    {
+                        var slnxFile = SlnxFile.FromDocument(doc, directory);
                         allErrors.AddRange(requiredFilesChecker.CheckInSlnx(matched, slnxFile));
+                    }
                 }
             }
 
@@ -70,12 +86,13 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
         return results;
     }
 
-    private static FileValidationResult Error(string file, ValidationErrorCode code, string message) =>
+    private static FileValidationResult Error(string file, ValidationErrorCode code, string message,
+        int? line = null, int? column = null) =>
         new()
         {
             File = file,
             HasErrors = true,
-            Errors = [new ValidationError(code, message)],
+            Errors = [new ValidationError(code, message, null, line, column)],
         };
 
     private bool IsBinaryFile(string path)
@@ -86,4 +103,3 @@ internal sealed class ValidationCollector(IFileSystem fileSystem, ISlnxValidator
         return buffer[..bytesRead].Contains((byte)0);
     }
 }
-

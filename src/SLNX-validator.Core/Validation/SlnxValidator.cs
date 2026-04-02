@@ -10,35 +10,24 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
     /// <summary>
     /// Validates a .slnx file against the XSD schema and checks that all referenced files exist on disk.
     /// </summary>
-    /// <param name="slnxContent">The raw XML content of the .slnx file.</param>
+    /// <param name="doc">The already-parsed XML document (with line info).</param>
+    /// <param name="slnxContent">The raw XML content, required for stream-based XSD validation.</param>
     /// <param name="slnxDirectory">The directory that contains the .slnx file, used to resolve relative paths.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    public async Task<SlnxValidationResult> ValidateAsync(string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default)
+    public async Task<ValidationResult> ValidateAsync(XDocument doc, string slnxContent, string slnxDirectory, CancellationToken cancellationToken = default)
     {
         var result = new ValidationResult();
-
-        XDocument doc;
-        try
-        {
-            doc = XDocument.Parse(slnxContent, LoadOptions.SetLineInfo);
-        }
-        catch (XmlException ex)
-        {
-            result.AddError(ValidationErrorCode.InvalidXml, $"Invalid XML: {ex.Message}", line: ex.LineNumber, column: ex.LinePosition);
-            return new SlnxValidationResult(result, null);
-        }
 
         await xsdValidator.ValidateAsync(slnxContent, result, cancellationToken);
 
         if (!result.IsValid)
         {
-            return new SlnxValidationResult(result, null);
+            return result;
         }
 
-        var slnxFile = SlnxFile.FromDocument(doc, slnxDirectory);
         ValidatePaths(doc, slnxDirectory, result);
 
-        return new SlnxValidationResult(result, slnxFile);
+        return result;
     }
 
     private void ValidatePaths(XDocument doc, string slnxDirectory, ValidationResult result)

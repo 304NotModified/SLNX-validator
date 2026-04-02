@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
@@ -22,8 +23,9 @@ public class SolutionIntegrationTests
         var content = await File.ReadAllTextAsync(slnxFile.FullName);
 
         var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator(new SlnxXsdProvider()));
-        var result = await validator.ValidateAsync(content, slnxFile.DirectoryName!);
+        var doc = XDocument.Parse(content, LoadOptions.SetLineInfo);
+        var result = await validator.ValidateAsync(doc, content, slnxFile.DirectoryName!);
 
-        result.ValidationResult.Errors.Should().BeEmpty();
+        result.Errors.Should().BeEmpty();
     }
 }
