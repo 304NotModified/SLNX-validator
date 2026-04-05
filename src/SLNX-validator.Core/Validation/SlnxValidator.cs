@@ -26,8 +26,8 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
         foreach (var fileEntry in slnxFile.Solution.AllFiles())
         {
             var path = fileEntry.Path;
-            var line = fileEntry.Line;
-            var column = fileEntry.Column;
+            var line = fileEntry.LineInfo?.Line;
+            var column = fileEntry.LineInfo?.Column;
 
             if (path.Contains('*') || path.Contains('?'))
             {

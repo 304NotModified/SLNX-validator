@@ -60,54 +60,47 @@ public sealed class SlnxFile
         return new SlnxFile(slnxDirectory, originalContent, solution, files);
     }
 
+    private static SlnxLineInfo? GetLineInfo(XObject obj)
+    {
+        if (obj is IXmlLineInfo li && li.HasLineInfo())
+            return new SlnxLineInfo(li.LineNumber, li.LinePosition);
+        return null;
+    }
+
     private static SlnxSolution ParseSolution(XDocument doc)
     {
         var root = doc.Root;
         if (root is null)
-            return new SlnxSolution(null, null, [], [], [], null, null);
+            return new SlnxSolution(null, null, [], [], [], null);
 
-        var li = (IXmlLineInfo)root;
         return new SlnxSolution(
             description: root.Attribute("Description")?.Value,
             version: root.Attribute("Version")?.Value,
             files: root.Elements("File").Select(ParseFileEntry).ToList(),
             projects: root.Elements("Project").Select(ParseProject).ToList(),
             folders: root.Elements("Folder").Select(ParseFolder).ToList(),
-            line: li.HasLineInfo() ? li.LineNumber : null,
-            column: li.HasLineInfo() ? li.LinePosition : null);
+            lineInfo: GetLineInfo(root));
     }
 
     private static SlnxFolder ParseFolder(XElement el)
-    {
-        var li = (IXmlLineInfo)el;
-        return new SlnxFolder(
+        => new(
             name: el.Attribute("Name")?.Value ?? string.Empty,
             files: el.Elements("File").Select(ParseFileEntry).ToList(),
             projects: el.Elements("Project").Select(ParseProject).ToList(),
             folders: el.Elements("Folder").Select(ParseFolder).ToList(),
-            line: li.HasLineInfo() ? li.LineNumber : null,
-            column: li.HasLineInfo() ? li.LinePosition : null);
-    }
+            lineInfo: GetLineInfo(el));
 
     private static SlnxProject ParseProject(XElement el)
-    {
-        var li = (IXmlLineInfo)el;
-        return new SlnxProject(
+        => new(
             path: el.Attribute("Path")?.Value ?? string.Empty,
             type: el.Attribute("Type")?.Value,
             displayName: el.Attribute("DisplayName")?.Value,
-            line: li.HasLineInfo() ? li.LineNumber : null,
-            column: li.HasLineInfo() ? li.LinePosition : null);
-    }
+            lineInfo: GetLineInfo(el));
 
     private static SlnxFileEntry ParseFileEntry(XElement el)
-    {
-        var li = (IXmlLineInfo)el;
-        return new SlnxFileEntry(
+        => new(
             path: el.Attribute("Path")?.Value ?? string.Empty,
-            line: li.HasLineInfo() ? li.LineNumber : null,
-            column: li.HasLineInfo() ? li.LinePosition : null);
-    }
+            lineInfo: GetLineInfo(el));
 
     private static IReadOnlyList<string> ComputeAbsoluteFiles(SlnxSolution solution, string slnxDirectory)
     {
