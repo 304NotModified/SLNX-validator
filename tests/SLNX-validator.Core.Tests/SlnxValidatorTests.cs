@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
@@ -14,8 +13,9 @@ public class SlnxValidatorTests
 
     private static Task<ValidationResult> ValidateAsync(Validation.SlnxValidator validator, string slnx)
     {
-        var doc = XDocument.Parse(slnx, LoadOptions.SetLineInfo);
-        return validator.ValidateAsync(SlnxFile.FromDocument(doc, slnx, RepoRoot));
+        var file = SlnxFile.Parse(slnx, RepoRoot)
+            ?? throw new InvalidOperationException("Test XML is not valid.");
+        return validator.ValidateAsync(file);
     }
 
     [Test]

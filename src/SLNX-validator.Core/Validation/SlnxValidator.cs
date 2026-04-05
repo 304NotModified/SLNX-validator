@@ -1,5 +1,3 @@
-using System.Xml;
-using System.Xml.Linq;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
@@ -25,12 +23,11 @@ internal sealed class SlnxValidator(IFileSystem fileSystem, IXsdValidator xsdVal
 
     private void ValidatePaths(SlnxFile slnxFile, ValidationResult result)
     {
-        foreach (var file in slnxFile.Document.Descendants("File"))
+        foreach (var fileEntry in slnxFile.Solution.AllFiles())
         {
-            var path = file.Attribute("Path")!.Value;
-            var lineInfo = (IXmlLineInfo)file;
-            var line = lineInfo.HasLineInfo() ? lineInfo.LineNumber : (int?)null;
-            var column = lineInfo.HasLineInfo() ? lineInfo.LinePosition : (int?)null;
+            var path = fileEntry.Path;
+            var line = fileEntry.LineInfo?.Line;
+            var column = fileEntry.LineInfo?.Column;
 
             if (path.Contains('*') || path.Contains('?'))
             {

@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
@@ -23,8 +22,8 @@ public class SolutionIntegrationTests
         var content = await File.ReadAllTextAsync(slnxFile.FullName);
 
         var validator = new CoreSlnxValidator(new RealFileSystem(), new XsdValidator(new SlnxXsdProvider()));
-        var doc = XDocument.Parse(content, LoadOptions.SetLineInfo);
-        var slnxFileModel = SlnxFile.FromDocument(doc, content, slnxFile.DirectoryName!);
+        var slnxFileModel = SlnxFile.Parse(content, slnxFile.DirectoryName!)
+            ?? throw new InvalidOperationException($"Failed to parse .slnx file: {slnxFile.FullName}");
         var result = await validator.ValidateAsync(slnxFileModel);
 
         result.Errors.Should().BeEmpty();
