@@ -20,7 +20,8 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fi
         {
             if (!fileSystem.FileExists(file))
             {
-                results.Add(Error(file, ValidationErrorCode.FileNotFound, $"File not found: {file}"));
+                results.Add(Error(file, ValidationErrorCode.FileNotFound, $"File not found: {file}",
+                    shortMessage: "The specified .slnx file does not exist"));
                 continue;
             }
 
@@ -88,12 +89,12 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fi
     }
 
     private static FileValidationResult Error(string file, ValidationErrorCode code, string message,
-        int? line = null, int? column = null) =>
+        string? shortMessage = null, int? line = null, int? column = null) =>
         new()
         {
             File = file,
             HasErrors = true,
-            Errors = [new ValidationError(code, message, null, line, column)],
+            Errors = [new ValidationError(code, message, ShortMessage: shortMessage, Line: line, Column: column)],
         };
 
     private bool IsBinaryFile(string path)

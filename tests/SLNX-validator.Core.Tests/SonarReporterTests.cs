@@ -33,6 +33,54 @@ public class SonarReporterTests
     }
 
     [Test]
+    public async Task WriteReportAsync_WithShortMessage_UsesShortMessageForSQReport()
+    {
+        // Arrange
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "test.slnx",
+                HasErrors = true,
+                Errors = [new ValidationError(ValidationErrorCode.FileNotFound,
+                    "File not found: C:\\repo\\MySolution.slnx",
+                    ShortMessage: "The specified .slnx file does not exist")]
+            }
+        };
+
+        // Act
+        using var doc = await WriteAndReadReportAsync(results);
+
+        // Assert
+        var message = doc.RootElement.GetProperty("issues")[0]
+            .GetProperty("primaryLocation").GetProperty("message").GetString();
+        message.Should().Be("The specified .slnx file does not exist");
+    }
+
+    [Test]
+    public async Task WriteReportAsync_WithoutShortMessage_UsesMessageForSQReport()
+    {
+        // Arrange
+        var results = new List<FileValidationResult>
+        {
+            new()
+            {
+                File = "test.slnx",
+                HasErrors = true,
+                Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found: docs\\README.md")]
+            }
+        };
+
+        // Act
+        using var doc = await WriteAndReadReportAsync(results);
+
+        // Assert
+        var message = doc.RootElement.GetProperty("issues")[0]
+            .GetProperty("primaryLocation").GetProperty("message").GetString();
+        message.Should().Be("File not found: docs\\README.md");
+    }
+
+    [Test]
     public async Task WriteReportAsync_WithError_WritesCorrectRuleAndIssue()
     {
         var results = new List<FileValidationResult>
