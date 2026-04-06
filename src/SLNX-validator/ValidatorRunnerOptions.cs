@@ -1,4 +1,4 @@
-using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
@@ -10,4 +10,5 @@ internal sealed record ValidatorRunnerOptions(
     bool ContinueOnError,
     string? RequiredFilesPattern,
     string WorkingDirectory,
-    IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? SeverityOverrides = null);
+    IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? SeverityOverrides = null,
+    string? SarifReportPath = null);

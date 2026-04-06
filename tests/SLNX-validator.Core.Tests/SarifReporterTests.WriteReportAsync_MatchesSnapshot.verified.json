@@ -1,0 +1,80 @@
+﻿{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "slnx-validator",
+          "informationUri": "https://github.com/304NotModified/SLNX-validator",
+          "rules": [
+            {
+              "id": "SLNX011",
+              "shortDescription": {
+                "text": "Referenced file not found"
+              },
+              "fullDescription": {
+                "text": "A file referenced in a <File Path=\"...\"> element does not exist on disk."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX012",
+              "shortDescription": {
+                "text": "Invalid wildcard usage"
+              },
+              "fullDescription": {
+                "text": "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SLNX011",
+          "level": "error",
+          "message": {
+            "text": "File not found: docs\\CONTRIBUTING.md"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Backend.slnx"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX012",
+          "level": "warning",
+          "message": {
+            "text": "Wildcard patterns are not supported: docs\\*.md"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Backend.slnx"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

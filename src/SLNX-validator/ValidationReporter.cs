@@ -1,4 +1,4 @@
-using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
@@ -6,7 +6,7 @@ namespace JulianVerdurmen.SlnxValidator;
 internal static class ValidationReporter
 {
     public static async Task Report(IReadOnlyList<FileValidationResult> results,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
+        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
     {
         foreach (var result in results)
         {
@@ -37,14 +37,14 @@ internal static class ValidationReporter
     }
 
     private static bool IsVisible(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides) =>
+        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides) =>
         overrides is null || !overrides.TryGetValue(code, out var severity) || severity is not null;
 
     private static bool IsFailingError(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
     {
         if (overrides is not null && overrides.TryGetValue(code, out var severity))
-            return severity is SonarRuleSeverity.BLOCKER or SonarRuleSeverity.CRITICAL or SonarRuleSeverity.MAJOR;
+            return severity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
         return true; // default: all errors are failing
     }
 

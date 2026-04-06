@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
@@ -14,7 +15,8 @@ public class ValidatorRunnerTests
         var resolver = Substitute.For<ISlnxFileResolver>();
         var collector = new SlnxCollector(fileSystem, resolver, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, checker, fileSystem);
+        var sarifReporter = new SarifReporter(fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
@@ -36,7 +38,8 @@ public class ValidatorRunnerTests
         resolver.Resolve(Arg.Any<string>()).Returns([slnxPath]);
         var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
         var sonarReporter = new SonarReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, checker, fileSystem);
+        var sarifReporter = new SarifReporter(fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
     }
 
     #region RunAsync – file resolution

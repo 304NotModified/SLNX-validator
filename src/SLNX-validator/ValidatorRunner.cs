@@ -1,12 +1,14 @@
 using JulianVerdurmen.SlnxValidator.Core;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
+using JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
-internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter sonarReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
+internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter sonarReporter, ISarifReporter sarifReporter, IRequiredFilesChecker requiredFilesChecker, IFileSystem fileSystem)
 {
     public async Task<int> RunAsync(ValidatorRunnerOptions options, CancellationToken cancellationToken)
     {
@@ -36,15 +38,22 @@ internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter so
             Console.WriteLine($"SonarQube report written to: {options.SonarqubeReportPath} ({size} bytes)");
         }
 
+        if (options.SarifReportPath is not null)
+        {
+            await sarifReporter.WriteReportAsync(results, options.SarifReportPath, overrides);
+            var size = fileSystem.GetFileSize(options.SarifReportPath);
+            Console.WriteLine($"SARIF report written to: {options.SarifReportPath} ({size} bytes)");
+        }
+
         var hasErrors = results.Any(r => r.Errors.Any(e => IsFailingError(e.Code, overrides)));
         return !options.ContinueOnError && hasErrors ? 1 : 0;
     }
 
     private static bool IsFailingError(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? overrides)
+        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
     {
         if (overrides is not null && overrides.TryGetValue(code, out var severity))
-            return severity is SonarRuleSeverity.BLOCKER or SonarRuleSeverity.CRITICAL or SonarRuleSeverity.MAJOR;
+            return severity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
         return true; // default: all errors are failing
     }
 }

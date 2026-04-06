@@ -1,5 +1,5 @@
 using AwesomeAssertions;
-using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator.Tests;
@@ -26,7 +26,7 @@ public class SeverityOverridesParserTests
 
         // Assert
         result.Should().HaveCount(1);
-        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(SonarRuleSeverity.MINOR);
+        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(RuleSeverity.MINOR);
     }
 
     [Test]
@@ -36,8 +36,8 @@ public class SeverityOverridesParserTests
         var result = SeverityOverridesParser.Parse(null, null, null, "SLNX011,SLNX012", null, null);
 
         // Assert
-        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(SonarRuleSeverity.MINOR);
-        result[ValidationErrorCode.InvalidWildcardUsage].Should().Be(SonarRuleSeverity.MINOR);
+        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(RuleSeverity.MINOR);
+        result[ValidationErrorCode.InvalidWildcardUsage].Should().Be(RuleSeverity.MINOR);
     }
 
     [Test]
@@ -47,7 +47,7 @@ public class SeverityOverridesParserTests
         var result = SeverityOverridesParser.Parse(null, null, null, "ReferencedFileNotFound", null, null);
 
         // Assert
-        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(SonarRuleSeverity.MINOR);
+        result[ValidationErrorCode.ReferencedFileNotFound].Should().Be(RuleSeverity.MINOR);
     }
 
     [Test]
@@ -83,7 +83,7 @@ public class SeverityOverridesParserTests
         // Assert
         var allCodes = Enum.GetValues<ValidationErrorCode>();
         result.Should().HaveCount(allCodes.Length);
-        result.Should().AllSatisfy(kvp => kvp.Value.Should().Be(SonarRuleSeverity.INFO));
+        result.Should().AllSatisfy(kvp => kvp.Value.Should().Be(RuleSeverity.INFO));
     }
 
     [Test]
@@ -113,9 +113,9 @@ public class SeverityOverridesParserTests
         foreach (var code in allCodes)
         {
             if (code == ValidationErrorCode.ReferencedFileNotFound)
-                result[code].Should().Be(SonarRuleSeverity.MAJOR);
+                result[code].Should().Be(RuleSeverity.MAJOR);
             else
-                result[code].Should().Be(SonarRuleSeverity.INFO);
+                result[code].Should().Be(RuleSeverity.INFO);
         }
     }
 
@@ -126,7 +126,7 @@ public class SeverityOverridesParserTests
         var result = SeverityOverridesParser.Parse(null, null, "SLNX013", null, null, "*");
 
         // Assert: SLNX013 (XsdViolation) should be MAJOR; all others should be null (ignored)
-        result[ValidationErrorCode.XsdViolation].Should().Be(SonarRuleSeverity.MAJOR);
+        result[ValidationErrorCode.XsdViolation].Should().Be(RuleSeverity.MAJOR);
         result[ValidationErrorCode.ReferencedFileNotFound].Should().BeNull();
         result[ValidationErrorCode.FileNotFound].Should().BeNull();
     }
@@ -138,8 +138,8 @@ public class SeverityOverridesParserTests
         var result = SeverityOverridesParser.Parse(null, null, null, "*", "SLNX001", null);
 
         // Assert: SLNX001 (FileNotFound) should be INFO; all others should be MINOR
-        result[ValidationErrorCode.FileNotFound].Should().Be(SonarRuleSeverity.INFO);
-        result[ValidationErrorCode.XsdViolation].Should().Be(SonarRuleSeverity.MINOR);
+        result[ValidationErrorCode.FileNotFound].Should().Be(RuleSeverity.INFO);
+        result[ValidationErrorCode.XsdViolation].Should().Be(RuleSeverity.MINOR);
     }
 
     #endregion

@@ -1,3 +1,5 @@
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
+
 namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
 internal sealed record SonarRule
@@ -8,6 +10,6 @@ internal sealed record SonarRule
     public required string EngineId { get; init; }
     public required SonarCleanCodeAttribute CleanCodeAttribute { get; init; }
     public required SonarRuleType Type { get; init; }
-    public required SonarRuleSeverity Severity { get; init; }
+    public required RuleSeverity Severity { get; init; }
     public required List<SonarImpact> Impacts { get; init; }
 }

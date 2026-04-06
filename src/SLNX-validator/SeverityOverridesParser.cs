@@ -1,36 +1,36 @@
-using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
 internal static class SeverityOverridesParser
 {
-    public static IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?> Parse(
+    public static IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?> Parse(
         string? blocker, string? critical, string? major, string? minor, string? info, string? ignore)
     {
-        var result = new Dictionary<ValidationErrorCode, SonarRuleSeverity?>();
+        var result = new Dictionary<ValidationErrorCode, RuleSeverity?>();
 
         // Pass 1: wildcards only (lowest priority — expanded first so specific codes can overwrite)
-        ParseInto(blocker,  SonarRuleSeverity.BLOCKER,  result, wildcardOnly: true);
-        ParseInto(critical, SonarRuleSeverity.CRITICAL, result, wildcardOnly: true);
-        ParseInto(major,    SonarRuleSeverity.MAJOR,    result, wildcardOnly: true);
-        ParseInto(minor,    SonarRuleSeverity.MINOR,    result, wildcardOnly: true);
-        ParseInto(info,     SonarRuleSeverity.INFO,     result, wildcardOnly: true);
-        ParseInto(ignore,   null,                       result, wildcardOnly: true);
+        ParseInto(blocker,  RuleSeverity.BLOCKER,  result, wildcardOnly: true);
+        ParseInto(critical, RuleSeverity.CRITICAL, result, wildcardOnly: true);
+        ParseInto(major,    RuleSeverity.MAJOR,    result, wildcardOnly: true);
+        ParseInto(minor,    RuleSeverity.MINOR,    result, wildcardOnly: true);
+        ParseInto(info,     RuleSeverity.INFO,     result, wildcardOnly: true);
+        ParseInto(ignore,   null,                  result, wildcardOnly: true);
 
         // Pass 2: specific codes (highest priority — overwrite wildcards from pass 1)
-        ParseInto(blocker,  SonarRuleSeverity.BLOCKER,  result, wildcardOnly: false);
-        ParseInto(critical, SonarRuleSeverity.CRITICAL, result, wildcardOnly: false);
-        ParseInto(major,    SonarRuleSeverity.MAJOR,    result, wildcardOnly: false);
-        ParseInto(minor,    SonarRuleSeverity.MINOR,    result, wildcardOnly: false);
-        ParseInto(info,     SonarRuleSeverity.INFO,     result, wildcardOnly: false);
-        ParseInto(ignore,   null,                       result, wildcardOnly: false);
+        ParseInto(blocker,  RuleSeverity.BLOCKER,  result, wildcardOnly: false);
+        ParseInto(critical, RuleSeverity.CRITICAL, result, wildcardOnly: false);
+        ParseInto(major,    RuleSeverity.MAJOR,    result, wildcardOnly: false);
+        ParseInto(minor,    RuleSeverity.MINOR,    result, wildcardOnly: false);
+        ParseInto(info,     RuleSeverity.INFO,     result, wildcardOnly: false);
+        ParseInto(ignore,   null,                  result, wildcardOnly: false);
 
         return result;
     }
 
-    private static void ParseInto(string? input, SonarRuleSeverity? severity,
-        Dictionary<ValidationErrorCode, SonarRuleSeverity?> target, bool wildcardOnly)
+    private static void ParseInto(string? input, RuleSeverity? severity,
+        Dictionary<ValidationErrorCode, RuleSeverity?> target, bool wildcardOnly)
     {
         if (input is null) return;
 

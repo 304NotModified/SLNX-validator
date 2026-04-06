@@ -1,4 +1,5 @@
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
+using JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IFileSystem, RealFileSystem>();
         services.AddSingleton<ISonarReporter, SonarReporter>();
+        services.AddSingleton<ISarifReporter, SarifReporter>();
         services.AddSingleton<ISlnxXsdProvider, SlnxXsdProvider>();
         services.AddSingleton<IXsdValidator, XsdValidator>();
         services.AddSingleton<ISlnxValidator, Validation.SlnxValidator>();

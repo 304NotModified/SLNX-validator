@@ -18,6 +18,11 @@ public static class Program
             Description = "Write a SonarQube generic issue report to the specified file path."
         };
 
+        var sarifReportOption = new Option<string?>("--sarif-report-file")
+        {
+            Description = "Write a SARIF 2.1.0 report to the specified file path."
+        };
+
         var continueOnErrorOption = new Option<bool>("--continue-on-error")
         {
             Description = "Continue and exit with code 0 even when validation errors are found."
@@ -62,6 +67,7 @@ public static class Program
         {
             inputArgument,
             sonarqubeReportOption,
+            sarifReportOption,
             continueOnErrorOption,
             requiredFilesOption,
             blockerOption,
@@ -92,7 +98,8 @@ public static class Program
                     parseResult.GetValue(majorOption),
                     parseResult.GetValue(minorOption),
                     parseResult.GetValue(infoOption),
-                    parseResult.GetValue(ignoreOption)));
+                    parseResult.GetValue(ignoreOption)),
+                SarifReportPath: parseResult.GetValue(sarifReportOption));
 
             return await services.GetRequiredService<ValidatorRunner>().RunAsync(options, cancellationToken);
         });
