@@ -57,6 +57,8 @@ jobs:
         if: steps.pr.outputs.is_pr == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PR_BRANCH: ${{ steps.pr.outputs.branch }}
         run: |
           dotnet sonarscanner begin \
             /k:"slnx-validator" \
@@ -64,8 +66,8 @@ jobs:
             /d:sonar.token="${SONAR_TOKEN}" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" \
-            /d:sonar.pullrequest.key="${{ steps.pr.outputs.number }}" \
-            /d:sonar.pullrequest.branch="${{ steps.pr.outputs.branch }}" \
+            /d:sonar.pullrequest.key="${PR_NUMBER}" \
+            /d:sonar.pullrequest.branch="${PR_BRANCH}" \
             /d:sonar.pullrequest.base="main"
 
       - name: Begin SonarCloud analysis (push)
