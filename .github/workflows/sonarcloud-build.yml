@@ -1,0 +1,53 @@
+name: SonarCloud - Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Restore dependencies
+        run: dotnet restore SLNX-validator.slnx
+
+      - name: Build
+        run: dotnet build SLNX-validator.slnx --no-incremental -c Release
+
+      - name: Test with coverage
+        run: dotnet-coverage collect "dotnet test --solution SLNX-validator.slnx --no-build -c Release --verbosity normal" -f xml -o coverage.xml
+
+      - name: Save PR metadata
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "${{ github.event.pull_request.number }}" > pr_number.txt
+          echo "${{ github.event.pull_request.head.sha }}" > pr_sha.txt
+          echo "${{ github.event.pull_request.head.ref }}" > pr_branch.txt
+
+      - name: Upload SonarCloud artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-artifacts
+          path: |
+            coverage.xml
+            pr_number.txt
+            pr_sha.txt
+            pr_branch.txt
+          retention-days: 1

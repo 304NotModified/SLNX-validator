@@ -1,0 +1,89 @@
+name: SonarCloud - Analyze
+
+on:
+  workflow_run:
+    workflows: ["SonarCloud - Build & Test"]
+    types:
+      - completed
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install SonarScanner for .NET
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet tool install --global dotnet-coverage
+
+      - name: Download SonarCloud artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sonar-artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Read PR metadata
+        id: pr
+        run: |
+          if [ -f pr_number.txt ]; then
+            echo "number=$(cat pr_number.txt)" >> $GITHUB_OUTPUT
+            echo "sha=$(cat pr_sha.txt)" >> $GITHUB_OUTPUT
+            echo "branch=$(cat pr_branch.txt)" >> $GITHUB_OUTPUT
+            echo "is_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_pr=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Restore dependencies
+        run: dotnet restore SLNX-validator.slnx
+
+      - name: Begin SonarCloud analysis (PR)
+        if: steps.pr.outputs.is_pr == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"slnx-validator" \
+            /o:"304notmodified" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" \
+            /d:sonar.pullrequest.key="${{ steps.pr.outputs.number }}" \
+            /d:sonar.pullrequest.branch="${{ steps.pr.outputs.branch }}" \
+            /d:sonar.pullrequest.base="main"
+
+      - name: Begin SonarCloud analysis (push)
+        if: steps.pr.outputs.is_pr == 'false'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"slnx-validator" \
+            /o:"304notmodified" \
+            /d:sonar.token="${SONAR_TOKEN}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml"
+
+      - name: Build
+        run: dotnet build SLNX-validator.slnx --no-incremental -c Release
+
+      - name: End SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
