@@ -53,3 +53,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"
+
+      - name: SonarCloud summary
+        if: always()
+        run: |
+          echo "## 🔍 SonarCloud Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View full results: [sonarcloud.io/project/overview?id=slnx-validator](https://sonarcloud.io/project/overview?id=slnx-validator)" >> $GITHUB_STEP_SUMMARY
