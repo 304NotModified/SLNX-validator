@@ -88,13 +88,13 @@ public sealed class SarifReporter(IFileSystem fileSystem) : ISarifReporter
     {
         if (overrides is not null && overrides.TryGetValue(code, out var severity) && severity.HasValue)
             return severity.Value;
-        return RuleMetadataProvider.Get(code).DefaultSeverity;
+        return RuleProvider.Get(code).DefaultSeverity;
     }
 
     private static SarifReportingDescriptor BuildRule(ValidationErrorCode code,
         IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
     {
-        var meta = RuleMetadataProvider.Get(code);
+        var meta = RuleProvider.Get(code);
         var effectiveSeverity = GetEffectiveSeverity(code, overrides);
         return new SarifReportingDescriptor
         {

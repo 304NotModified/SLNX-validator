@@ -77,7 +77,7 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
 
     private static SonarRule GetRuleDefinition(ValidationErrorCode code)
     {
-        var meta = RuleMetadataProvider.Get(code);
+        var meta = RuleProvider.Get(code);
         return CreateRule(code, meta.Name, meta.Description, GetSonarRuleType(code),
             meta.DefaultSeverity, GetCleanCodeAttribute(code), GetImpactSeverity(code));
     }

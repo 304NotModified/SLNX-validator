@@ -1,6 +1,6 @@
 namespace JulianVerdurmen.SlnxValidator.Core.Reporting;
 
-public sealed record RuleMetadata(
+public sealed record Rule(
     string Id,
     string Name,
     string Description,

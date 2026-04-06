@@ -63,13 +63,21 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 
 ### `--sarif-report-file <file>`
 
-Writes a [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) (Static Analysis Results Interchange Format) report to the specified file path. SARIF is the industry-standard format for static analysis results, supported natively by GitHub Code Scanning, Azure DevOps, Visual Studio, and VS Code.
+[SARIF](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) (Static Analysis Results Interchange Format) is an open OASIS standard for static analysis tool output. It enables interoperability between analysis tools and result viewers, so the same report can be consumed by GitHub Code Scanning, Azure DevOps, Visual Studio, VS Code, and other tools without any conversion.
+
+**Benefits of SARIF:**
+- Native integration with [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning) — issues appear as alerts in the **Security → Code Scanning** tab
+- Supported by Azure DevOps, Visual Studio, and VS Code out of the box
+- Rich result format: rule metadata, severity, file paths, and line numbers in a single file
+- Widely adopted standard — see [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) and the [SARIF web viewer](https://sarifweb.azurewebsites.net/)
+
+**Usage:**
 
 ```powershell
 slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-error
 ```
 
-Severity mapping from `RuleSeverity` to SARIF levels:
+Severity mapping from `RuleSeverity` to SARIF levels (see also the [GitHub Code Scanning integration example](#github-code-scanning-integration-example)):
 
 | Severity | SARIF level |
 |----------|-------------|
@@ -77,7 +85,16 @@ Severity mapping from `RuleSeverity` to SARIF levels:
 | `MINOR` | `warning` |
 | `INFO` | `note` |
 
-Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in the SARIF output, just like in the SonarQube report.
+Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in the SARIF output. See [Severity override flags](#severity-override-flags) for details.
+
+**Viewers and reporting:**
+- [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning) — upload via `github/codeql-action/upload-sarif@v3` (see [example below](#github-code-scanning-integration-example))
+- [Visual Studio](https://learn.microsoft.com/en-us/visualstudio/code-quality/use-roslyn-analyzers) — open `.sarif` files directly
+- [VS Code SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer)
+- [Azure DevOps](https://learn.microsoft.com/en-us/azure/devops/pipelines/test/publish-code-coverage-results) — publish via pipeline tasks
+- [SARIF web viewer](https://sarifweb.azurewebsites.net/) — online viewer for quick inspection
+
+Further reading: [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) · [Why SARIF?](https://github.com/microsoft/sarif-tutorials/blob/main/docs/1-Introduction.md#why-sarif) · [SonarSource SARIF overview](https://www.sonarsource.com/resources/library/sarif/)
 
 ### `--continue-on-error`
 
@@ -138,7 +155,7 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 
 ### Severity override flags
 
-Override the severity of specific validation codes, or suppress them entirely. This controls the exit code behaviour and the severity written to both SonarQube and SARIF reports.
+Override the severity of specific validation codes, or suppress them entirely. This controls the exit code behaviour, the console output label, and the severity written to SonarQube and SARIF reports.
 
 | Flag | Severity | Causes exit code `1`? | SARIF level |
 |------|----------|-----------------------|-------------|
