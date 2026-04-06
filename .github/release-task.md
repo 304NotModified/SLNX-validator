@@ -7,7 +7,7 @@ Use this file to perform a full release with a single prompt.
 Type in Copilot chat:
 
 ```
-Voer de release task uit voor versie X.Y.Z
+Run the release task for version X.Y.Z
 ```
 
 or shorthand:
@@ -89,6 +89,8 @@ File: `src/SLNX-validator/SLNX-validator.csproj`
 - Body: the full extended changelog from step 4
 
 ### 8. Create the GitHub Release via the API
+
+**Wait for the PR from step 7 to be merged into `main` before creating the release.**
 
 `POST /repos/{owner}/{repo}/releases`
 
