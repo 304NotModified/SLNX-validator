@@ -19,7 +19,7 @@ internal sealed class ValidatorRunnerOptions
         bool ContinueOnError,
         string? RequiredFilesPattern,
         string WorkingDirectory,
-        SeverityOverrides? SeverityOverrides = null,
+        SeverityOverrides? severityOverrides = null,
         string? SarifReportPath = null)
     {
         this.Input = Input;
@@ -27,7 +27,7 @@ internal sealed class ValidatorRunnerOptions
         this.ContinueOnError = ContinueOnError;
         this.RequiredFilesPattern = RequiredFilesPattern;
         this.WorkingDirectory = WorkingDirectory;
-        this.SeverityOverrides = SeverityOverrides ?? global::JulianVerdurmen.SlnxValidator.Core.Reporting.SeverityOverrides.Empty;
+        this.SeverityOverrides = severityOverrides ?? SeverityOverrides.Empty;
         this.SarifReportPath = SarifReportPath;
     }
 }
