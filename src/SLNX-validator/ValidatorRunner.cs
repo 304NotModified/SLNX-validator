@@ -4,7 +4,6 @@ using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.Validation;
-using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator;
 
@@ -28,32 +27,24 @@ internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter so
             return options.ContinueOnError ? 0 : 1;
         }
 
-        var overrides = options.SeverityOverrides;
-        await ValidationReporter.Report(results, overrides);
+        var reportResults = new ReportResults(results, options.SeverityOverrides);
+        await ValidationReporter.Report(reportResults);
 
         if (options.SonarqubeReportPath is not null)
         {
-            await sonarReporter.WriteReportAsync(results, options.SonarqubeReportPath, overrides);
+            await sonarReporter.WriteReportAsync(reportResults, options.SonarqubeReportPath);
             var size = fileSystem.GetFileSize(options.SonarqubeReportPath);
             Console.WriteLine($"SonarQube report written to: {options.SonarqubeReportPath} ({size} bytes)");
         }
 
         if (options.SarifReportPath is not null)
         {
-            await sarifReporter.WriteReportAsync(results, options.SarifReportPath, overrides);
+            await sarifReporter.WriteReportAsync(reportResults, options.SarifReportPath);
             var size = fileSystem.GetFileSize(options.SarifReportPath);
             Console.WriteLine($"SARIF report written to: {options.SarifReportPath} ({size} bytes)");
         }
 
-        var hasErrors = results.Any(r => r.Errors.Any(e => IsFailingError(e.Code, overrides)));
+        var hasErrors = results.Any(r => r.Errors.Any(e => options.SeverityOverrides.IsFailingError(e.Code)));
         return !options.ContinueOnError && hasErrors ? 1 : 0;
-    }
-
-    private static bool IsFailingError(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
-    {
-        if (overrides is not null && overrides.TryGetValue(code, out var severity))
-            return severity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
-        return true; // default: all errors are failing
     }
 }

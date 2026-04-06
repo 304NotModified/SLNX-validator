@@ -12,10 +12,10 @@ public class SonarReporterTests
 
     private static async Task<JsonDocument> WriteAndReadReportAsync(
         IReadOnlyList<FileValidationResult> results,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
+        SeverityOverrides? severityOverrides = null)
     {
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream, severityOverrides);
+        await CreateReporter().WriteReportAsync(new ReportResults(results, severityOverrides), stream);
         return JsonDocument.Parse(stream.ToArray());
     }
 
@@ -216,7 +216,7 @@ public class SonarReporterTests
         };
 
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(new ReportResults(results), stream);
 
         await Verify(stream, "json");
     }
@@ -236,7 +236,7 @@ public class SonarReporterTests
         };
 
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(new ReportResults(results), stream);
 
         await Verify(stream, "json");
     }
@@ -251,7 +251,7 @@ public class SonarReporterTests
             new() { File = "test.slnx", HasErrors = false, Errors = [] }
         };
 
-        await reporter.WriteReportAsync(results, "output/reports/sonar.json");
+        await reporter.WriteReportAsync(new ReportResults(results), "output/reports/sonar.json");
 
         fileSystem.CreatedDirectories.Should().Equal([Path.Combine("output", "reports")]);
     }
@@ -266,7 +266,7 @@ public class SonarReporterTests
             new() { File = "test.slnx", HasErrors = false, Errors = [] }
         };
 
-        await reporter.WriteReportAsync(results, "sonar.json");
+        await reporter.WriteReportAsync(new ReportResults(results), "sonar.json");
 
         fileSystem.CreatedDirectories.Should().BeEmpty();
     }
@@ -286,10 +286,10 @@ public class SonarReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = RuleSeverity.MINOR
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -312,10 +312,10 @@ public class SonarReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = null
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -343,9 +343,10 @@ public class SonarReporterTests
             }
         };
         // Ignore all codes, but make SLNX013 (XsdViolation) MAJOR
-        var overrides = Enum.GetValues<ValidationErrorCode>()
+        var dict = Enum.GetValues<ValidationErrorCode>()
             .ToDictionary(c => c, _ => (RuleSeverity?)null);
-        overrides[ValidationErrorCode.XsdViolation] = RuleSeverity.MAJOR;
+        dict[ValidationErrorCode.XsdViolation] = RuleSeverity.MAJOR;
+        var overrides = new SeverityOverrides(dict);
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);

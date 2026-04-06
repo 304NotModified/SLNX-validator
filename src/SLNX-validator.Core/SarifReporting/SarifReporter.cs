@@ -1,58 +1,29 @@
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 
-public sealed class SarifReporter(IFileSystem fileSystem) : ISarifReporter
+public sealed class SarifReporter(IFileSystem fileSystem) : ReporterBase(fileSystem), ISarifReporter
 {
     private const string SarifSchema = "https://json.schemastore.org/sarif-2.1.0.json";
     private const string SarifVersion = "2.1.0";
     private const string ToolName = "slnx-validator";
     private const string ToolInformationUri = "https://github.com/304NotModified/SLNX-validator";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public override async Task WriteReportAsync(ReportResults reportResults, Stream outputStream)
     {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        Converters = { new JsonStringEnumConverter() }
-    };
-
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
-    {
-        var directory = Path.GetDirectoryName(outputPath);
-        if (!string.IsNullOrEmpty(directory))
-            fileSystem.CreateDirectory(directory);
-
-        await using var stream = fileSystem.CreateFile(outputPath);
-        await WriteReportAsync(results, stream, severityOverrides);
-    }
-
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
-    {
-        var usedCodes = results
-            .SelectMany(r => r.Errors)
-            .Select(e => e.Code)
-            .Where(c => !IsIgnored(c, severityOverrides))
-            .Distinct()
-            .OrderBy(c => (int)c)
-            .ToList();
+        var usedCodes = reportResults.UsedCodes;
 
         var rules = usedCodes
-            .Select(c => BuildRule(c, severityOverrides))
+            .Select(c => BuildRule(c, reportResults.Overrides))
             .ToList();
 
-        var sarifResults = results
+        var sarifResults = reportResults.Results
             .SelectMany(r => r.Errors
-                .Where(e => !IsIgnored(e.Code, severityOverrides))
-                .Select(e => BuildResult(r.File, e, severityOverrides)))
+                .Where(e => !reportResults.Overrides.IsIgnored(e.Code))
+                .Select(e => BuildResult(r.File, e, reportResults.Overrides)))
             .ToList();
 
         var log = new SarifLog
@@ -80,38 +51,24 @@ public sealed class SarifReporter(IFileSystem fileSystem) : ISarifReporter
         await JsonSerializer.SerializeAsync(outputStream, log, JsonOptions);
     }
 
-    private static bool IsIgnored(ValidationErrorCode code, IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides) =>
-        overrides is not null && overrides.TryGetValue(code, out var severity) && severity is null;
-
-    private static RuleSeverity GetEffectiveSeverity(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
+    private static SarifReportingDescriptor BuildRule(ValidationErrorCode code, SeverityOverrides overrides)
     {
-        if (overrides is not null && overrides.TryGetValue(code, out var severity) && severity.HasValue)
-            return severity.Value;
-        return RuleProvider.Get(code).DefaultSeverity;
-    }
-
-    private static SarifReportingDescriptor BuildRule(ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
-    {
-        var meta = RuleProvider.Get(code);
-        var effectiveSeverity = GetEffectiveSeverity(code, overrides);
+        var resolved = RuleProvider.Resolve(code, overrides);
         return new SarifReportingDescriptor
         {
-            Id = meta.Id,
-            ShortDescription = new SarifMessage { Text = meta.Name },
-            FullDescription = new SarifMessage { Text = meta.Description },
+            Id = resolved.Id,
+            ShortDescription = new SarifMessage { Text = resolved.Name },
+            FullDescription = new SarifMessage { Text = resolved.Description },
             DefaultConfiguration = new SarifDefaultConfiguration
             {
-                Level = MapToSarifLevel(effectiveSeverity)
+                Level = MapToSarifLevel(resolved.EffectiveSeverity)
             }
         };
     }
 
-    private static SarifResult BuildResult(string filePath, ValidationError error,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
+    private static SarifResult BuildResult(string filePath, ValidationError error, SeverityOverrides overrides)
     {
-        var effectiveSeverity = GetEffectiveSeverity(error.Code, overrides);
+        var effectiveSeverity = overrides.GetEffectiveSeverity(error.Code);
         return new SarifResult
         {
             RuleId = error.Code.ToCode(),

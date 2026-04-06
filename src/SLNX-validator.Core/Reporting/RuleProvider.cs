@@ -57,4 +57,10 @@ public static class RuleProvider
             return rule;
         throw new ArgumentOutOfRangeException(nameof(code), code, null);
     }
+
+    public static ResolvedRule Resolve(ValidationErrorCode code, SeverityOverrides overrides)
+    {
+        var rule = Get(code);
+        return new ResolvedRule(rule.Id, rule.Name, rule.Description, overrides.GetEffectiveSeverity(code));
+    }
 }

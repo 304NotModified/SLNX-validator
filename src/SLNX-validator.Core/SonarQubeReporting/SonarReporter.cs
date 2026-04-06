@@ -1,50 +1,21 @@
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using JulianVerdurmen.SlnxValidator.Core.FileSystem;
 using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
 namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
-public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
+public sealed class SonarReporter(IFileSystem fileSystem) : ReporterBase(fileSystem), ISonarReporter
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public override async Task WriteReportAsync(ReportResults reportResults, Stream outputStream)
     {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        Converters = { new JsonStringEnumConverter() }
-    };
+        var usedCodes = reportResults.UsedCodes;
 
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
-    {
-        var directory = Path.GetDirectoryName(outputPath);
-        if (!string.IsNullOrEmpty(directory))
-            fileSystem.CreateDirectory(directory);
+        var rules = usedCodes.Select(c => BuildRule(c, reportResults.Overrides)).ToList();
 
-        await using var stream = fileSystem.CreateFile(outputPath);
-        await WriteReportAsync(results, stream, severityOverrides);
-    }
-
-    public async Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, Stream outputStream,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
-    {
-        var usedCodes = results
-            .SelectMany(r => r.Errors)
-            .Select(e => e.Code)
-            .Where(c => !IsIgnored(c, severityOverrides))
-            .Distinct()
-            .OrderBy(c => (int)c)
-            .ToList();
-
-        var rules = usedCodes.Select(c => ApplyOverride(GetRuleDefinition(c), c, severityOverrides)).ToList();
-
-        var issues = results
+        var issues = reportResults.Results
             .SelectMany(r => r.Errors
-                .Where(e => !IsIgnored(e.Code, severityOverrides))
+                .Where(e => !reportResults.Overrides.IsIgnored(e.Code))
                 .Select(e => BuildIssue(r.File, e)))
             .ToList();
 
@@ -64,22 +35,11 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
         }
     };
 
-    private static bool IsIgnored(ValidationErrorCode code, IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides) =>
-        overrides is not null && overrides.TryGetValue(code, out var severity) && severity is null;
-
-    private static SonarRule ApplyOverride(SonarRule rule, ValidationErrorCode code,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? overrides)
+    private static SonarRule BuildRule(ValidationErrorCode code, SeverityOverrides overrides)
     {
-        if (overrides is not null && overrides.TryGetValue(code, out var severity) && severity.HasValue)
-            return rule with { Severity = severity.Value };
-        return rule;
-    }
-
-    private static SonarRule GetRuleDefinition(ValidationErrorCode code)
-    {
-        var meta = RuleProvider.Get(code);
-        return CreateRule(code, meta.Name, meta.Description, GetSonarRuleType(code),
-            meta.DefaultSeverity, GetCleanCodeAttribute(code), GetImpactSeverity(code));
+        var resolved = RuleProvider.Resolve(code, overrides);
+        return CreateRule(code, resolved.Name, resolved.Description, GetSonarRuleType(code),
+            resolved.EffectiveSeverity, GetCleanCodeAttribute(code), GetImpactSeverity(code));
     }
 
     private static SonarRuleType GetSonarRuleType(ValidationErrorCode code) => SonarRuleType.BUG;
