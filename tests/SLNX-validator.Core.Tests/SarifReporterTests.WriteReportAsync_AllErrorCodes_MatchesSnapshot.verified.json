@@ -1,0 +1,297 @@
+﻿{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "slnx-validator",
+          "informationUri": "https://github.com/304NotModified/SLNX-validator",
+          "rules": [
+            {
+              "id": "SLNX001",
+              "shortDescription": {
+                "text": "Input file not found"
+              },
+              "fullDescription": {
+                "text": "The specified .slnx file does not exist."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX002",
+              "shortDescription": {
+                "text": "Invalid file extension"
+              },
+              "fullDescription": {
+                "text": "The input file does not have a .slnx extension."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "SLNX003",
+              "shortDescription": {
+                "text": "File is not a text file"
+              },
+              "fullDescription": {
+                "text": "The file is binary and cannot be parsed as XML."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX010",
+              "shortDescription": {
+                "text": "Invalid XML"
+              },
+              "fullDescription": {
+                "text": "The .slnx file is not valid XML."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX011",
+              "shortDescription": {
+                "text": "Referenced file not found"
+              },
+              "fullDescription": {
+                "text": "A file referenced in a <File Path=\"...\"> element does not exist on disk."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX012",
+              "shortDescription": {
+                "text": "Invalid wildcard usage"
+              },
+              "fullDescription": {
+                "text": "A <File Path=\"...\"> element contains a wildcard pattern, which is not supported."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              }
+            },
+            {
+              "id": "SLNX013",
+              "shortDescription": {
+                "text": "XSD schema violation"
+              },
+              "fullDescription": {
+                "text": "The XML structure violates the .slnx schema."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX020",
+              "shortDescription": {
+                "text": "Required file does not exist on the system"
+              },
+              "fullDescription": {
+                "text": "A file required by '--required-files' does not exist on the file system."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            },
+            {
+              "id": "SLNX021",
+              "shortDescription": {
+                "text": "Required file not referenced in solution"
+              },
+              "fullDescription": {
+                "text": "A file required by '--required-files' exists on the file system but is not referenced as a <File> element in the solution."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "SLNX001",
+          "level": "error",
+          "message": {
+            "text": "Sample message for FileNotFound"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX002",
+          "level": "warning",
+          "message": {
+            "text": "Sample message for InvalidExtension"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 2
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX003",
+          "level": "error",
+          "message": {
+            "text": "Sample message for NotATextFile"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 3
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX010",
+          "level": "error",
+          "message": {
+            "text": "Sample message for InvalidXml"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 4
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX011",
+          "level": "error",
+          "message": {
+            "text": "Sample message for ReferencedFileNotFound"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 5
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX012",
+          "level": "warning",
+          "message": {
+            "text": "Sample message for InvalidWildcardUsage"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX013",
+          "level": "error",
+          "message": {
+            "text": "Sample message for XsdViolation"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX020",
+          "level": "error",
+          "message": {
+            "text": "Sample message for RequiredFileDoesntExistOnSystem"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 8
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "SLNX021",
+          "level": "error",
+          "message": {
+            "text": "Sample message for RequiredFileNotReferencedInSolution"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "Solution.slnx"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

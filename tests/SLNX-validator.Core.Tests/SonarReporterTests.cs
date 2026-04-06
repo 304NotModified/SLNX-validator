@@ -1,5 +1,6 @@
 using System.Text.Json;
 using AwesomeAssertions;
+using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
@@ -11,7 +12,7 @@ public class SonarReporterTests
 
     private static async Task<JsonDocument> WriteAndReadReportAsync(
         IReadOnlyList<FileValidationResult> results,
-        IReadOnlyDictionary<ValidationErrorCode, SonarRuleSeverity?>? severityOverrides = null)
+        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
     {
         using var stream = new MemoryStream();
         await CreateReporter().WriteReportAsync(results, stream, severityOverrides);
@@ -285,9 +286,9 @@ public class SonarReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, SonarRuleSeverity?>
+        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
-            [ValidationErrorCode.ReferencedFileNotFound] = SonarRuleSeverity.MINOR
+            [ValidationErrorCode.ReferencedFileNotFound] = RuleSeverity.MINOR
         };
 
         // Act
@@ -311,7 +312,7 @@ public class SonarReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, SonarRuleSeverity?>
+        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = null
         };
@@ -343,8 +344,8 @@ public class SonarReporterTests
         };
         // Ignore all codes, but make SLNX013 (XsdViolation) MAJOR
         var overrides = Enum.GetValues<ValidationErrorCode>()
-            .ToDictionary(c => c, _ => (SonarRuleSeverity?)null);
-        overrides[ValidationErrorCode.XsdViolation] = SonarRuleSeverity.MAJOR;
+            .ToDictionary(c => c, _ => (RuleSeverity?)null);
+        overrides[ValidationErrorCode.XsdViolation] = RuleSeverity.MAJOR;
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);

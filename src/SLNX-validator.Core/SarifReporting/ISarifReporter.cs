@@ -1,9 +1,9 @@
 using JulianVerdurmen.SlnxValidator.Core.Reporting;
 using JulianVerdurmen.SlnxValidator.Core.ValidationResults;
 
-namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
+namespace JulianVerdurmen.SlnxValidator.Core.SarifReporting;
 
-public interface ISonarReporter
+public interface ISarifReporter
 {
     Task WriteReportAsync(IReadOnlyList<FileValidationResult> results, string outputPath,
         IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null);
