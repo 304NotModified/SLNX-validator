@@ -43,7 +43,8 @@ internal sealed class RequiredFilesChecker : IRequiredFilesChecker
                 errors.Add(new ValidationError(
                     ValidationErrorCode.RequiredFileNotReferencedInSolution,
                     $"Required file is not referenced in the solution: {requiredPath}" +
-                    $" — add: <File Path=\"{relativePath}\" />"));
+                    $" — add: <File Path=\"{relativePath}\" />",
+                    ShortMessage: $"Required file is not referenced in the solution — add: <File Path=\"{relativePath}\" />"));
             }
         }
 

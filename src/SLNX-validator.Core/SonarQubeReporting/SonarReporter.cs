@@ -57,7 +57,7 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ISonarReporter
         RuleId = error.Code.ToCode(),
         PrimaryLocation = new SonarLocation
         {
-            Message = error.Message,
+            Message = error.ShortMessage ?? error.Message,
             FilePath = filePath,
             TextRange = error.Line.HasValue ? new SonarTextRange { StartLine = error.Line.Value } : null
         }

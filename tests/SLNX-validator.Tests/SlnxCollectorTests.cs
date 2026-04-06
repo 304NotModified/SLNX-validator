@@ -104,6 +104,28 @@ public class SlnxCollectorTests
     }
 
     [Test]
+    public async Task CollectAsync_FileNotFound_UsesFullMessageAndShortMessage()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var validator = Substitute.For<ISlnxValidator>();
+        var checker = Substitute.For<IRequiredFilesChecker>();
+        var resolver = Substitute.For<ISlnxFileResolver>();
+        resolver.Resolve(Arg.Any<string>()).Returns([SlnxPath]);
+        var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
+
+        // Act
+        var results = await collector.CollectAsync(SlnxPath, requiredFilesOptions: null, CancellationToken.None);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeTrue();
+        var error = results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.FileNotFound).Which;
+        error.Message.Should().Be($"File not found: {SlnxPath}");
+        error.ShortMessage.Should().Be("The specified .slnx file does not exist");
+    }
+
+    [Test]
     public async Task CollectAsync_InvalidXml_ReturnsInvalidXmlError()
     {
         // Arrange
