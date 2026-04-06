@@ -11,7 +11,7 @@
             {
               "id": "SLNX001",
               "shortDescription": {
-                "text": "Input file not found"
+                "text": "SLNX file not found"
               },
               "fullDescription": {
                 "text": "The specified .slnx file does not exist."
@@ -23,7 +23,7 @@
             {
               "id": "SLNX002",
               "shortDescription": {
-                "text": "Invalid file extension"
+                "text": "Invalid solution file extension"
               },
               "fullDescription": {
                 "text": "The input file does not have a .slnx extension."
@@ -35,7 +35,7 @@
             {
               "id": "SLNX003",
               "shortDescription": {
-                "text": "File is not a text file"
+                "text": "SLNX file is not a text file"
               },
               "fullDescription": {
                 "text": "The file is binary and cannot be parsed as XML."

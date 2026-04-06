@@ -2,7 +2,7 @@
   "rules": [
     {
       "id": "SLNX001",
-      "name": "Input file not found",
+      "name": "SLNX file not found",
       "description": "The specified .slnx file does not exist.",
       "engineId": "slnx-validator",
       "cleanCodeAttribute": "COMPLETE",
@@ -17,7 +17,7 @@
     },
     {
       "id": "SLNX002",
-      "name": "Invalid file extension",
+      "name": "Invalid solution file extension",
       "description": "The input file does not have a .slnx extension.",
       "engineId": "slnx-validator",
       "cleanCodeAttribute": "CONVENTIONAL",
@@ -32,7 +32,7 @@
     },
     {
       "id": "SLNX003",
-      "name": "File is not a text file",
+      "name": "SLNX file is not a text file",
       "description": "The file is binary and cannot be parsed as XML.",
       "engineId": "slnx-validator",
       "cleanCodeAttribute": "COMPLETE",

@@ -67,7 +67,7 @@ slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --conti
 
 **Benefits of SARIF:**
 - Native integration with [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning) — issues appear as alerts in the **Security → Code Scanning** tab
-- Supported by Visual Studio (built-in), and via extensions for Visual Studio Code and Azure DevOps
+- Supported by [Visual Studio](https://learn.microsoft.com/en-us/visualstudio/code-quality/working-with-sarif-reports) (built-in since Visual Studio 2022), and via extensions for Visual Studio Code and Azure DevOps
 - Rich result format: rule metadata, severity, file paths, and line numbers in a single file
 - Widely adopted standard — see [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) and the [SARIF web viewer](https://sarifweb.azurewebsites.net/)
 
@@ -89,9 +89,9 @@ Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in 
 
 **Viewers and reporting:**
 - [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github) — upload via `github/codeql-action/upload-sarif@v3` (see [example below](#github-code-scanning-integration-example))
-- [Visual Studio](https://learn.microsoft.com/en-us/visualstudio/code-quality/working-with-sarif-reports) — built-in SARIF viewer (open `.sarif` files directly in Visual Studio 2022+)
-- [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer) — requires the [SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer)
-- [Azure DevOps](https://marketplace.visualstudio.com/items?itemName=sariftools.scans) — requires the [SARIF SAST Scans Tab extension](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
+- Visual Studio — built-in SARIF viewer since Visual Studio 2022 (see [docs](https://learn.microsoft.com/en-us/visualstudio/code-quality/working-with-sarif-reports))
+- Visual Studio Code — requires the [SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer)
+- Azure DevOps — requires the [SARIF SAST Scans Tab extension](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
 - [SARIF web viewer](https://sarifweb.azurewebsites.net/) — online viewer for quick inspection
 
 Further reading: [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) · [Why SARIF?](https://github.com/microsoft/sarif-tutorials/blob/main/docs/1-Introduction.md#why-sarif) · [SonarSource SARIF overview](https://www.sonarsource.com/resources/library/sarif/)
