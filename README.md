@@ -61,15 +61,9 @@ Writes a [SonarQube generic issue report](https://docs.sonarsource.com/sonarqube
 slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --continue-on-error
 ```
 
-### `--continue-on-error`
-
-Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube handles the failure decision. Default: `false`.
-
 ### `--sarif-report-file <file>`
 
 Writes a [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) (Static Analysis Results Interchange Format) report to the specified file path. SARIF is the industry-standard format for static analysis results, supported natively by GitHub Code Scanning, Azure DevOps, Visual Studio, and VS Code.
-
-> 💡 Both `.sarif` and `.sarif.json` are common file extensions. Use `.sarif.json` if your editor or CI tool benefits from JSON syntax highlighting.
 
 ```powershell
 slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-error
@@ -84,6 +78,10 @@ Severity mapping from `RuleSeverity` to SARIF levels:
 | `INFO` | `note` |
 
 Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in the SARIF output, just like in the SonarQube report.
+
+### `--continue-on-error`
+
+Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube or GitHub Code Scanning handles the failure decision. Default: `false`.
 
 ### `--required-files`
 
@@ -140,16 +138,16 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 
 ### Severity override flags
 
-Override the severity of specific validation codes, or suppress them entirely. This controls both the exit code behaviour and the severity written to the SonarQube JSON report.
+Override the severity of specific validation codes, or suppress them entirely. This controls the exit code behaviour and the severity written to both SonarQube and SARIF reports.
 
-| Flag | Severity | Causes exit code `1`? |
-|------|----------|-----------------------|
-| `--blocker <codes>` | `BLOCKER` | ✅ yes |
-| `--critical <codes>` | `CRITICAL` | ✅ yes |
-| `--major <codes>` | `MAJOR` | ✅ yes (default for all codes) |
-| `--minor <codes>` | `MINOR` | ❌ no — shown with `(warning)` label |
-| `--info <codes>` | `INFO` | ❌ no — shown with `(info)` label |
-| `--ignore <codes>` | *(suppressed)* | ❌ no — not shown at all, not in SonarQube or SARIF report |
+| Flag | Severity | Causes exit code `1`? | SARIF level |
+|------|----------|-----------------------|-------------|
+| `--blocker <codes>` | `BLOCKER` | ✅ yes | `error` |
+| `--critical <codes>` | `CRITICAL` | ✅ yes | `error` |
+| `--major <codes>` | `MAJOR` | ✅ yes (default for all codes) | `error` |
+| `--minor <codes>` | `MINOR` | ❌ no — shown with `(warning)` label | `warning` |
+| `--info <codes>` | `INFO` | ❌ no — shown with `(info)` label | `note` |
+| `--ignore <codes>` | *(suppressed)* | ❌ no — not shown at all, not in SonarQube or SARIF report | *(omitted)* |
 
 Each flag accepts a **comma-separated list of codes** or the **wildcard `*`** to match all codes:
 
@@ -242,6 +240,8 @@ sonar.xml.file.suffixes=.xml,.xsd,.xsl,.slnx
 
 ## GitHub Code Scanning integration example
 
+Use `--sarif-report-file` to generate a SARIF 2.1.0 file and upload it to GitHub Code Scanning:
+
 ```powershell
 slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-error
 ```
@@ -257,6 +257,8 @@ slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-e
 ```
 
 This uploads the validation results to the **Security → Code Scanning** tab of your repository. Issues appear as alerts with rule descriptions, file locations, and links back to the relevant lines.
+
+Example SARIF output:
 
 ```json
 {
