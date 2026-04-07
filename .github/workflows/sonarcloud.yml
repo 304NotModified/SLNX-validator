@@ -56,7 +56,13 @@ jobs:
 
       - name: SonarCloud summary
         if: always()
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "## 🔍 SonarCloud Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "View full results: [sonarcloud.io/project/overview?id=slnx-validator](https://sonarcloud.io/project/overview?id=slnx-validator)" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$PR_NUMBER" ]; then
+            echo "View full results: [sonarcloud.io/summary/new_code?id=slnx-validator&pullRequest=${PR_NUMBER}](https://sonarcloud.io/summary/new_code?id=slnx-validator&pullRequest=${PR_NUMBER})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "View full results: [sonarcloud.io/project/overview?id=slnx-validator](https://sonarcloud.io/project/overview?id=slnx-validator)" >> $GITHUB_STEP_SUMMARY
+          fi
