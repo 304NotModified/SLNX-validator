@@ -26,9 +26,8 @@ public sealed class SeverityOverrides : IEnumerable<KeyValuePair<ValidationError
 
     public bool IsFailingError(ValidationErrorCode code)
     {
-        if (_overrides.TryGetValue(code, out var severity))
-            return severity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
-        return true; // default: all errors are failing
+        var effectiveSeverity = GetEffectiveSeverity(code);
+        return effectiveSeverity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
     }
 
     public RuleSeverity GetEffectiveSeverity(ValidationErrorCode code)
