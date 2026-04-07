@@ -30,13 +30,14 @@ or shorthand:
 
 **Ignore entirely** (do not include in the changelog):
 - PRs authored by `dependabot[bot]`
-- PRs whose title starts with `docs:`
+- PRs with label `documentation` or whose title starts with `docs:`
+- PRs with label `dependencies`
 - PRs whose title contains `Bump version` or `release notes`
 
-**Categorize the remaining PRs:**
-- **New features** (`feat:` prefix): list as a main bullet with a short description
-- **Bug fixes** (`fix:` prefix): list as a main bullet with a short description
-- **Refactoring / chore** (`chore:`, `refactor:`, or titles containing `Move`, `Rename`, `Replace public API`): list briefly at the bottom in a separate section `🔧 Internal improvements` with PR links only
+**Categorize the remaining PRs** (check both the PR title prefix **and** the GitHub label):
+- **New features** — `feat:` title prefix OR label `enhancement`: list as a main bullet with a short description
+- **Bug fixes** — `fix:` title prefix OR label `bug`: list as a main bullet with a short description
+- **Internal improvements** — `chore:`/`refactor:` title prefix, label `refactoring`, label `build`, or titles containing `Move`, `Rename`, `Replace public API`: list briefly at the bottom in a separate section `🔧 Internal improvements` with PR links only
 
 ### 3. Generate the short changelog (for `<PackageReleaseNotes>` in the csproj)
 
