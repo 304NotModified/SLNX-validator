@@ -9,14 +9,26 @@
 
 There's just one catch: neither Visual Studio, MSBuild, nor the `dotnet` CLI fully validates `.slnx` files. Invalid constructs are silently accepted, which can lead to confusing errors that are surprisingly hard to trace back to the solution file.
 
-`slnx-validator` fills that gap. It catches the issues the toolchain quietly ignores. 🔍
+`slnx-validator` fills that gap. It catches the issues the toolchain quietly ignores. 🔍 It can also verify that required files exist on disk and are referenced in the solution file, with full glob wildcard support.
 
 You could read more about the `.slnx` at the [official .NET blog post](https://devblogs.microsoft.com/dotnet/introducing-slnx-support-dotnet-cli/)
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Options](#options)
+- [Exit codes](#exit-codes)
+- [Example output](#example-output)
+- [What is validated](#what-is-validated)
+- [Error codes](#error-codes)
+- [SonarQube integration example](#sonarqube-integration-example)
+- [GitHub Code Scanning integration example](#github-code-scanning-integration-example)
 
 ## Installation
 
 ```powershell
-dotnet tool install -g slnx-validator
+dotnet tool install -g slnx-validator --version 0.5.0
 ```
 
 `slnx-validator` runs on .NET 8, 9, and 10. Note that using `.slnx` files in your projects requires .NET SDK 9 or later — but your projects themselves can still target .NET 8.
@@ -47,58 +59,7 @@ Validate multiple files, folders, or patterns at once (comma-separated):
 slnx-validator "MySolution.slnx, src\*.slnx, other\"
 ```
 
-Exit code `0` means everything is valid. Exit code `1` means one or more errors were found.
-
 ## Options
-
-### `--sonarqube-report-file <file>`
-
-Writes a [SonarQube generic issue report](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/importing-external-issues/generic-issue-import-format) to the specified JSON file. Import it into your Sonar analysis via the `sonar.externalIssuesReportPaths` property.
-
-> 💡 When using `--sonarqube-report-file`, it's recommended to also pass `--continue-on-error` so the tool always exits with code `0`. This lets the SonarQube quality gate — not the tool's exit code — determine whether your pipeline fails.
-
-```powershell
-slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --continue-on-error
-```
-
-### `--sarif-report-file <file>`
-
-[SARIF](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) (Static Analysis Results Interchange Format) is an open OASIS standard for static analysis tool output. It enables interoperability between analysis tools and result viewers, so the same report can be consumed by GitHub Code Scanning, Azure DevOps, Visual Studio, Visual Studio Code, and other tools without any conversion.
-
-**Benefits of SARIF:**
-- Native integration with [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning) — issues appear as alerts in the **Security → Code Scanning** tab
-- Supported via extensions for Visual Studio, Visual Studio Code, and Azure DevOps
-- Rich result format: rule metadata, severity, file paths, and line numbers in a single file
-- Widely adopted standard — see [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) and the [SARIF web viewer](https://sarifweb.azurewebsites.net/)
-
-**Usage:**
-
-```powershell
-slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-error
-```
-
-Severity mapping from `RuleSeverity` to SARIF levels (see also the [GitHub Code Scanning integration example](#github-code-scanning-integration-example)):
-
-| Severity | SARIF level |
-|----------|-------------|
-| `BLOCKER`, `CRITICAL`, `MAJOR` | `error` |
-| `MINOR` | `warning` |
-| `INFO` | `note` |
-
-Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in the SARIF output. See [Severity override flags](#severity-override-flags) for details.
-
-**Viewers and reporting:**
-- [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github) — upload via `github/codeql-action/upload-sarif@v3` (see [example below](#github-code-scanning-integration-example))
-- Visual Studio — requires the [Microsoft SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=WDGIS.MicrosoftSarifViewer2022)
-- Visual Studio Code — requires the [SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer)
-- Azure DevOps — requires the [SARIF SAST Scans Tab extension](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
-- [SARIF web viewer](https://sarifweb.azurewebsites.net/) — online viewer for quick inspection
-
-Further reading: [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) · [Why SARIF?](https://github.com/microsoft/sarif-tutorials/blob/main/docs/1-Introduction.md#why-sarif) · [SonarSource SARIF overview](https://www.sonarsource.com/resources/library/sarif/)
-
-### `--continue-on-error`
-
-Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube or GitHub Code Scanning handles the failure decision. Default: `false`.
 
 ### `--required-files`
 
@@ -146,12 +107,54 @@ Require a specific config file and the entire `docs/` directory:
 slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 ```
 
-**Exit codes**
+### `--continue-on-error`
 
-| Code | Description |
-|------|-------------|
-| `0`  | All patterns matched and all matched files are referenced in the solution. |
-| `1`  | Any validation error — including required files not existing or not referenced. |
+Always exits with code `0`, even when validation errors are found. Useful in CI pipelines where SonarQube or GitHub Code Scanning handles the failure decision. Default: `false`.
+
+### `--sonarqube-report-file <file>`
+
+Writes a [SonarQube generic issue report](https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/importing-external-issues/generic-issue-import-format) to the specified JSON file. Import it into your Sonar analysis via the `sonar.externalIssuesReportPaths` property.
+
+> 💡 When using `--sonarqube-report-file`, it's recommended to also pass `--continue-on-error` so the tool always exits with code `0`. This lets the SonarQube quality gate — not the tool's exit code — determine whether your pipeline fails.
+
+```powershell
+slnx-validator MySolution.slnx --sonarqube-report-file sonar-issues.json --continue-on-error
+```
+
+### `--sarif-report-file <file>`
+
+[SARIF](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html) (Static Analysis Results Interchange Format) is an open OASIS standard for static analysis tool output. It enables interoperability between analysis tools and result viewers, so the same report can be consumed by GitHub Code Scanning, Azure DevOps, Visual Studio, Visual Studio Code, and other tools without any conversion.
+
+**Benefits of SARIF:**
+- Native integration with [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning) — issues appear as alerts in the **Security → Code Scanning** tab
+- Supported via extensions for Visual Studio, Visual Studio Code, and Azure DevOps
+- Rich result format: rule metadata, severity, file paths, and line numbers in a single file
+- Widely adopted standard — see [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) and the [SARIF web viewer](https://sarifweb.azurewebsites.net/)
+
+**Usage:**
+
+```powershell
+slnx-validator MySolution.slnx --sarif-report-file results.sarif --continue-on-error
+```
+
+Severity mapping from `RuleSeverity` to SARIF levels (see also the [GitHub Code Scanning integration example](#github-code-scanning-integration-example)):
+
+| Severity | SARIF level |
+|----------|-------------|
+| `BLOCKER`, `CRITICAL`, `MAJOR` | `error` |
+| `MINOR` | `warning` |
+| `INFO` | `note` |
+
+Severity overrides (via `--minor`, `--info`, `--ignore`, etc.) are reflected in the SARIF output. See [Severity override flags](#severity-override-flags) for details.
+
+**Viewers and reporting:**
+- [GitHub Code Scanning](https://docs.github.com/en/code-security/code-scanning/integrating-with-code-scanning/uploading-a-sarif-file-to-github) — upload via `github/codeql-action/upload-sarif@v3` (see [example below](#github-code-scanning-integration-example))
+- Visual Studio — requires the [Microsoft SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=WDGIS.MicrosoftSarifViewer2022)
+- Visual Studio Code — requires the [SARIF Viewer extension](https://marketplace.visualstudio.com/items?itemName=MS-SarifVSCode.sarif-viewer)
+- Azure DevOps — requires the [SARIF SAST Scans Tab extension](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
+- [SARIF web viewer](https://sarifweb.azurewebsites.net/) — online viewer for quick inspection
+
+Further reading: [SARIF tutorials](https://github.com/microsoft/sarif-tutorials) · [Why SARIF?](https://github.com/microsoft/sarif-tutorials/blob/main/docs/1-Introduction.md#why-sarif) · [SonarSource SARIF overview](https://www.sonarsource.com/resources/library/sarif/)
 
 ### Severity override flags
 
@@ -204,6 +207,92 @@ Severity overrides are reflected in the generated rule definition in both SonarQ
 ```
 
 Codes set to `--ignore` are excluded from both the `rules` and `issues`/`results` arrays entirely.
+
+## Exit codes
+
+| Code | Description |
+|------|-------------|
+| `0`  | All files are valid (and all `--required-files` patterns matched and are referenced in the solution). |
+| `1`  | One or more validation errors were found — including XSD violations, missing files, or required files not existing or not referenced. |
+
+Use `--continue-on-error` to always exit with `0` and let SonarQube or GitHub Code Scanning handle the failure decision.
+
+## Example output
+
+### All valid ✅
+
+```powershell
+slnx-validator MySolution.slnx
+```
+
+```
+[OK]   MySolution.slnx
+```
+
+### Errors found ❌
+
+```powershell
+slnx-validator MySolution.slnx
+```
+
+```
+[FAIL] MySolution.slnx
+
+MySolution.slnx
+  - line 5: [SLNX013] The element 'Folder' in namespace '...' has invalid child element 'Folder'. List of possible elements expected: 'Project'.
+  - line 12: [SLNX011] File not found: docs\CONTRIBUTING.md
+```
+
+### Multiple files — mixed results
+
+```powershell
+slnx-validator src\
+```
+
+```
+[OK]   src\Frontend.slnx
+[FAIL] src\Backend.slnx
+
+src\Backend.slnx
+  - line 4: [SLNX011] File not found: docs\CONTRIBUTING.md
+  - line 8: [SLNX012] Wildcard patterns are not supported in file paths: docs\*.md
+```
+
+## What is validated
+
+This tool checks what `dotnet` / MSBuild / Visual Studio does **not** validate by default:
+
+- **XSD schema validation** — verifies that the `.slnx` file conforms to the [official Microsoft schema](https://github.com/microsoft/vs-solutionpersistence/blob/main/src/Microsoft.VisualStudio.SolutionPersistence/Serializer/Xml/Slnx.xsd).
+  Visual Studio silently accepts certain invalid constructs without showing any error — for example, a `<Folder>` nested inside another `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)).
+- **Solution folder file existence** — checks that every `<File Path="...">` listed inside a `<Folder>` actually exists on disk.
+- **Wildcard usage** — `.slnx` does not support wildcard patterns. Visual Studio silently accepts them but simply ignores the entries, so your files appear to be listed but are never actually resolved. `slnx-validator` catches this in `<File Path="...">` entries (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)):
+
+  ```xml
+  <!-- ❌ Silently ignored by Visual Studio — no error, no files loaded -->
+  <Folder Name="docs">
+    <File Path="docs\*.md" />
+  </Folder>
+  ```
+
+  > Wildcard support is a [known open request](https://github.com/dotnet/sdk/issues/41465) that was closed as not planned.
+
+The following are **intentionally out of scope** because the toolchain already handles them:
+
+- Project file existence (`<Project Path="...">`) — `dotnet build` / MSBuild already reports missing project files.
+
+## Error codes
+
+| Code | Name | Description |
+|------|------|-------------|
+| `SLNX001` | `FileNotFound`            | The input `.slnx` file does not exist. |
+| `SLNX002` | `InvalidExtension`        | The input file does not have a `.slnx` extension. |
+| `SLNX003` | `NotATextFile`            | The file is binary and cannot be parsed as XML. |
+| `SLNX010` | `InvalidXml`              | The file is not valid XML (see [`examples/invalid-not-xml.slnx`](examples/invalid-not-xml.slnx)). |
+| `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
+| `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
+| `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
+| `SLNX020` | `RequiredFileDoesntExistOnSystem`   | A `--required-files` pattern matched no files on the file system. |
+| `SLNX021` | `RequiredFileNotReferencedInSolution` | A `--required-files` matched file exists on disk but is not referenced as a `<File>` element in the solution. |
 
 ## SonarQube integration example
 
@@ -328,88 +417,3 @@ Example SARIF output:
   ]
 }
 ```
-
-## Example output
-
-### All valid ✅
-
-```powershell
-slnx-validator MySolution.slnx
-```
-
-```
-[OK]   MySolution.slnx
-```
-
-### Errors found ❌
-
-```powershell
-slnx-validator MySolution.slnx
-```
-
-```
-[FAIL] MySolution.slnx
-
-MySolution.slnx
-  - line 5: [SLNX013] The element 'Folder' in namespace '...' has invalid child element 'Folder'. List of possible elements expected: 'Project'.
-  - line 12: [SLNX011] File not found: docs\CONTRIBUTING.md
-```
-
-### Multiple files — mixed results
-
-```powershell
-slnx-validator src\
-```
-
-```
-[OK]   src\Frontend.slnx
-[FAIL] src\Backend.slnx
-
-src\Backend.slnx
-  - line 4: [SLNX011] File not found: docs\CONTRIBUTING.md
-  - line 8: [SLNX012] Wildcard patterns are not supported in file paths: docs\*.md
-```
-
-## What is validated
-
-This tool checks what `dotnet` / MSBuild / Visual Studio does **not** validate by default:
-
-- **XSD schema validation** — verifies that the `.slnx` file conforms to the [official Microsoft schema](https://github.com/microsoft/vs-solutionpersistence/blob/main/src/Microsoft.VisualStudio.SolutionPersistence/Serializer/Xml/Slnx.xsd).
-  Visual Studio silently accepts certain invalid constructs without showing any error — for example, a `<Folder>` nested inside another `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)).
-- **Solution folder file existence** — checks that every `<File Path="...">` listed inside a `<Folder>` actually exists on disk.
-- **Wildcard usage** — `.slnx` does not support wildcard patterns. Visual Studio silently accepts them but simply ignores the entries, so your files appear to be listed but are never actually resolved. `slnx-validator` catches this in `<File Path="...">` entries (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)):
-
-  ```xml
-  <!-- ❌ Silently ignored by Visual Studio — no error, no files loaded -->
-  <Folder Name="docs">
-    <File Path="docs\*.md" />
-  </Folder>
-  ```
-
-  > Wildcard support is a [known open request](https://github.com/dotnet/sdk/issues/41465) that was closed as not planned.
-
-The following are **intentionally out of scope** because the toolchain already handles them:
-
-- Project file existence (`<Project Path="...">`) — `dotnet build` / MSBuild already reports missing project files.
-
-## Error codes
-
-| Code | Name | Description |
-|------|------|-------------|
-| `SLNX001` | `FileNotFound`            | The input `.slnx` file does not exist. |
-| `SLNX002` | `InvalidExtension`        | The input file does not have a `.slnx` extension. |
-| `SLNX003` | `NotATextFile`            | The file is binary and cannot be parsed as XML. |
-| `SLNX010` | `InvalidXml`              | The file is not valid XML (see [`examples/invalid-not-xml.slnx`](examples/invalid-not-xml.slnx)). |
-| `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
-| `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
-| `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
-| `SLNX020` | `RequiredFileDoesntExistOnSystem`   | A `--required-files` pattern matched no files on the file system. |
-| `SLNX021` | `RequiredFileNotReferencedInSolution` | A `--required-files` matched file exists on disk but is not referenced as a `<File>` element in the solution. |
-
-## XSD Schema
-
-Microsoft doesn't provide much documentation for the `.slnx` format, but there is an XSD schema in the official `vs-solutionpersistence` repository — and it's enough to catch real structural problems before they cause trouble:
-
-> https://github.com/microsoft/vs-solutionpersistence/blob/main/src/Microsoft.VisualStudio.SolutionPersistence/Serializer/Xml/Slnx.xsd
-
-Licensed under the MIT License — Copyright (c) Microsoft Corporation.
