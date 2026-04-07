@@ -38,11 +38,11 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ReporterBase(fileSys
     private static SonarRule BuildRule(ValidationErrorCode code, SeverityOverrides overrides)
     {
         var resolved = RuleProvider.Resolve(code, overrides);
-        return CreateRule(code, resolved.Name, resolved.Description, GetSonarRuleType(code),
-            resolved.EffectiveSeverity, GetCleanCodeAttribute(code), GetImpactSeverity(code));
+        return CreateRule(code, resolved.Name, resolved.Description, GetSonarRuleType(),
+            resolved.EffectiveSeverity, GetCleanCodeAttribute(code), GetImpactSeverity());
     }
 
-    private static SonarRuleType GetSonarRuleType(ValidationErrorCode code) => SonarRuleType.BUG;
+    private static SonarRuleType GetSonarRuleType() => SonarRuleType.BUG;
 
     private static SonarCleanCodeAttribute GetCleanCodeAttribute(ValidationErrorCode code) => code switch
     {
@@ -50,7 +50,7 @@ public sealed class SonarReporter(IFileSystem fileSystem) : ReporterBase(fileSys
         _ => SonarCleanCodeAttribute.COMPLETE
     };
 
-    private static SonarImpactSeverity GetImpactSeverity(ValidationErrorCode code) => SonarImpactSeverity.MEDIUM;
+    private static SonarImpactSeverity GetImpactSeverity() => SonarImpactSeverity.MEDIUM;
 
     private static SonarRule CreateRule(ValidationErrorCode code, string name, string description,
         SonarRuleType type, RuleSeverity severity, SonarCleanCodeAttribute cleanCodeAttribute, SonarImpactSeverity impactSeverity) => new()
