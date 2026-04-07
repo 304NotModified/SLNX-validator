@@ -31,7 +31,7 @@ public class SlnxCollectorTests
     #region CollectAsync
 
     [Test]
-    public async Task CollectAsync_RequiredFilesPatternNoMatch_AddsRequiredFileDoesntExistOnSystemError()
+    public async Task CollectAsync_RequiredFilesPatternNoMatch_NoError()
     {
         // Arrange
         var (collector, _) = CreateCollector();
@@ -42,8 +42,7 @@ public class SlnxCollectorTests
 
         // Assert
         results.Should().HaveCount(1);
-        results[0].HasErrors.Should().BeTrue();
-        results[0].Errors.Should().ContainSingle(e => e.Code == ValidationErrorCode.RequiredFileDoesntExistOnSystem);
+        results[0].HasErrors.Should().BeFalse();
     }
 
     [Test]

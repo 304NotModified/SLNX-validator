@@ -6,7 +6,7 @@ namespace JulianVerdurmen.SlnxValidator;
 /// </summary>
 /// <param name="MatchedPaths">
 /// Absolute disk paths that were matched by <see cref="Pattern"/>.
-/// An empty list means the pattern matched no files.
+/// An empty list means the pattern matched no files — this is not an error (no files to check).
 /// <see langword="null"/> means the <c>--required-files</c> option was not used.
 /// </param>
 /// <param name="Pattern">The raw semicolon-separated pattern string supplied by the user.</param>
