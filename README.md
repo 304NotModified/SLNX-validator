@@ -104,7 +104,8 @@ Always exits with code `0`, even when validation errors are found. Useful in CI 
 
 Verify that a set of files or directories matching glob patterns exist on disk **and** are referenced as `<File>` entries in the solution file(s) being validated. Any failure is reported as a normal validation error (exit code `1`) that also appears in SonarQube reports.
 
-- **Reference check** — for each matched file that is not referenced as `<File Path="...">` in the `.slnx`, a `SLNX021` (`RequiredFileNotReferencedInSolution`) error is added. The error message shows the exact `<File>` element that should be added. If the pattern matches no files, the check is skipped silently (not an error).
+- **Disk check** — if a **literal** (non-wildcard) pattern matches no files on disk, a `SLNX020` (`RequiredFileDoesntExistOnSystem`) error is added. If the pattern contains wildcards (`*` or `?`) and matches no files, the check is skipped silently — zero matches is not an error.
+- **Reference check** — for each matched file that is not referenced as `<File Path="...">` in the `.slnx`, a `SLNX021` (`RequiredFileNotReferencedInSolution`) error is added. The error message shows the exact `<File>` element that should be added.
 
 Relative paths in the `.slnx` are resolved relative to the solution file's location.
 
@@ -149,8 +150,8 @@ slnx-validator MySolution.slnx --required-files "appsettings.json;docs/"
 
 | Code | Description |
 |------|-------------|
-| `0`  | All matched files are referenced in the solution (or no files matched the pattern). |
-| `1`  | Any validation error — including required files not referenced. |
+| `0`  | All matched files are referenced in the solution (or a wildcard pattern matched no files). |
+| `1`  | Any validation error — including a literal required file not existing or matched files not referenced. |
 
 ### Severity override flags
 
@@ -402,6 +403,7 @@ The following are **intentionally out of scope** because the toolchain already h
 | `SLNX011` | `ReferencedFileNotFound`  | A file referenced in `<File Path="...">` does not exist on disk. |
 | `SLNX012` | `InvalidWildcardUsage`    | A `<File Path="...">` contains a wildcard pattern (see [`examples/invalid-wildcard.slnx`](examples/invalid-wildcard.slnx)). |
 | `SLNX013` | `XsdViolation`            | The XML structure violates the schema, e.g. `<Folder>` inside `<Folder>` (see [`examples/invalid-xsd.slnx`](examples/invalid-xsd.slnx)). |
+| `SLNX020` | `RequiredFileDoesntExistOnSystem`   | A literal (non-wildcard) `--required-files` pattern matched no files on the file system. |
 | `SLNX021` | `RequiredFileNotReferencedInSolution` | A `--required-files` matched file exists on disk but is not referenced as a `<File>` element in the solution. |
 
 ## XSD Schema

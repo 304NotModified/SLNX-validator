@@ -125,14 +125,14 @@ public class ValidatorRunnerTests
     }
 
     [Test]
-    public async Task RunAsync_RequiredFiles_NoMatchOnDisk_ReturnsZero()
+    public async Task RunAsync_RequiredFiles_WildcardNoMatchOnDisk_ReturnsZero()
     {
         // Arrange
         var slnxPath = Path.GetFullPath("test.slnx");
 
         var checker = Substitute.For<IRequiredFilesChecker>();
         checker.ResolveMatchedPaths(Arg.Any<string>(), Arg.Any<string>())
-            .Returns([]); // nothing matched on disk — no error expected
+            .Returns([]); // nothing matched on disk — wildcard, so no error expected
 
         var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", checker);
 
@@ -142,6 +142,26 @@ public class ValidatorRunnerTests
 
         // Assert
         exitCode.Should().Be(0);
+    }
+
+    [Test]
+    public async Task RunAsync_RequiredFiles_LiteralNoMatchOnDisk_ReturnsOne()
+    {
+        // Arrange
+        var slnxPath = Path.GetFullPath("test.slnx");
+
+        var checker = Substitute.For<IRequiredFilesChecker>();
+        checker.ResolveMatchedPaths(Arg.Any<string>(), Arg.Any<string>())
+            .Returns([]); // nothing matched on disk — literal path, so SLNX020 expected
+
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", checker);
+
+        // Act
+        var exitCode = await runner.RunAsync(
+            Options(slnxPath, requiredFilesPattern: "unknownfile.md"), CancellationToken.None);
+
+        // Assert
+        exitCode.Should().Be(1);
     }
 
     #endregion

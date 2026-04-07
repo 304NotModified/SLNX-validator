@@ -61,7 +61,16 @@ internal sealed class SlnxCollector(IFileSystem fileSystem, ISlnxFileResolver fi
             if (requiredFilesOptions is not null)
             {
                 var matched = requiredFilesOptions.MatchedPaths;
-                if (matched is not null && matched.Count > 0)
+                if (matched is null || matched.Count == 0)
+                {
+                    if (!requiredFilesOptions.HasWildcard)
+                    {
+                        allErrors.Add(new ValidationError(
+                            ValidationErrorCode.RequiredFileDoesntExistOnSystem,
+                            $"Required file does not exist on the system. No files matched: {requiredFilesOptions.Pattern}"));
+                    }
+                }
+                else
                 {
                     var hasXsdErrors = allErrors.Any(e => e.Code == ValidationErrorCode.XsdViolation);
                     if (!hasXsdErrors)
