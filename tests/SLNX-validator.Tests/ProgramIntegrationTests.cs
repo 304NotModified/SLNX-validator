@@ -105,8 +105,9 @@ public class ProgramIntegrationTests
     }
 
     [Test]
-    public async Task Invoke_WithNonSlnxExtension_ReturnsNonZeroExitCode()
+    public async Task Invoke_WithNonSlnxExtension_ReturnsZeroExitCode()
     {
+        // InvalidExtension (SLNX002) has default severity MINOR, which does not cause exit code 1
         var path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".xml");
         await File.WriteAllTextAsync(path, "<Solution />");
 
@@ -114,7 +115,7 @@ public class ProgramIntegrationTests
         {
             var exitCode = await Program.Main([path]);
 
-            exitCode.Should().NotBe(0);
+            exitCode.Should().Be(0);
         }
         finally
         {
