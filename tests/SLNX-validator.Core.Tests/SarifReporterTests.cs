@@ -12,10 +12,10 @@ public class SarifReporterTests
 
     private static async Task<JsonDocument> WriteAndReadReportAsync(
         IReadOnlyList<FileValidationResult> results,
-        IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?>? severityOverrides = null)
+        SeverityOverrides? severityOverrides = null)
     {
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream, severityOverrides);
+        await CreateReporter().WriteReportAsync(new ReportResults(results, severityOverrides), stream);
         return JsonDocument.Parse(stream.ToArray());
     }
 
@@ -199,10 +199,10 @@ public class SarifReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = RuleSeverity.BLOCKER
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -225,10 +225,10 @@ public class SarifReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = RuleSeverity.MINOR
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -254,10 +254,10 @@ public class SarifReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = RuleSeverity.INFO
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -284,10 +284,10 @@ public class SarifReporterTests
                 Errors = [new ValidationError(ValidationErrorCode.ReferencedFileNotFound, "File not found")]
             }
         };
-        var overrides = new Dictionary<ValidationErrorCode, RuleSeverity?>
+        var overrides = new SeverityOverrides(new Dictionary<ValidationErrorCode, RuleSeverity?>
         {
             [ValidationErrorCode.ReferencedFileNotFound] = null
-        };
+        });
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -316,9 +316,10 @@ public class SarifReporterTests
             }
         };
         // Ignore all codes, but make SLNX013 (XsdViolation) MAJOR
-        var overrides = Enum.GetValues<ValidationErrorCode>()
+        var dict = Enum.GetValues<ValidationErrorCode>()
             .ToDictionary(c => c, _ => (RuleSeverity?)null);
-        overrides[ValidationErrorCode.XsdViolation] = RuleSeverity.MAJOR;
+        dict[ValidationErrorCode.XsdViolation] = RuleSeverity.MAJOR;
+        var overrides = new SeverityOverrides(dict);
 
         // Act
         using var doc = await WriteAndReadReportAsync(results, overrides);
@@ -347,7 +348,7 @@ public class SarifReporterTests
         };
 
         // Act
-        await reporter.WriteReportAsync(results, "output/reports/results.sarif");
+        await reporter.WriteReportAsync(new ReportResults(results), "output/reports/results.sarif");
 
         // Assert
         fileSystem.CreatedDirectories.Should().Equal([Path.Combine("output", "reports")]);
@@ -365,7 +366,7 @@ public class SarifReporterTests
         };
 
         // Act
-        await reporter.WriteReportAsync(results, "results.sarif");
+        await reporter.WriteReportAsync(new ReportResults(results), "results.sarif");
 
         // Assert
         fileSystem.CreatedDirectories.Should().BeEmpty();
@@ -395,7 +396,7 @@ public class SarifReporterTests
 
         // Act
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(new ReportResults(results), stream);
 
         // Assert
         await Verify(stream, "json");
@@ -418,7 +419,7 @@ public class SarifReporterTests
 
         // Act
         using var stream = new MemoryStream();
-        await CreateReporter().WriteReportAsync(results, stream);
+        await CreateReporter().WriteReportAsync(new ReportResults(results), stream);
 
         // Assert
         await Verify(stream, "json");

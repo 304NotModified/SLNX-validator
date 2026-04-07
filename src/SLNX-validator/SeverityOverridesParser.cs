@@ -5,7 +5,7 @@ namespace JulianVerdurmen.SlnxValidator;
 
 internal static class SeverityOverridesParser
 {
-    public static IReadOnlyDictionary<ValidationErrorCode, RuleSeverity?> Parse(
+    public static SeverityOverrides Parse(
         string? blocker, string? critical, string? major, string? minor, string? info, string? ignore)
     {
         var result = new Dictionary<ValidationErrorCode, RuleSeverity?>();
@@ -26,7 +26,7 @@ internal static class SeverityOverridesParser
         ParseInto(info,     RuleSeverity.INFO,     result, wildcardOnly: false);
         ParseInto(ignore,   null,                  result, wildcardOnly: false);
 
-        return result;
+        return new SeverityOverrides(result);
     }
 
     private static void ParseInto(string? input, RuleSeverity? severity,

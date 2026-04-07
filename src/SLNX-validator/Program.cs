@@ -92,7 +92,7 @@ public static class Program
                 ContinueOnError: parseResult.GetValue(continueOnErrorOption),
                 RequiredFilesPattern: parseResult.GetValue(requiredFilesOption),
                 WorkingDirectory: Environment.CurrentDirectory,
-                SeverityOverrides: SeverityOverridesParser.Parse(
+                severityOverrides: SeverityOverridesParser.Parse(
                     parseResult.GetValue(blockerOption),
                     parseResult.GetValue(criticalOption),
                     parseResult.GetValue(majorOption),
