@@ -31,11 +31,26 @@ public class SlnxCollectorTests
     #region CollectAsync
 
     [Test]
-    public async Task CollectAsync_RequiredFilesPatternNoMatch_AddsRequiredFileDoesntExistOnSystemError()
+    public async Task CollectAsync_WildcardPatternNoMatch_NoError()
     {
         // Arrange
         var (collector, _) = CreateCollector();
         var options = new RequiredFilesOptions(MatchedPaths: [], Pattern: "*.md");
+
+        // Act
+        var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
+
+        // Assert
+        results.Should().HaveCount(1);
+        results[0].HasErrors.Should().BeFalse();
+    }
+
+    [Test]
+    public async Task CollectAsync_LiteralPatternNoMatch_AddsRequiredFileDoesntExistOnSystemError()
+    {
+        // Arrange
+        var (collector, _) = CreateCollector();
+        var options = new RequiredFilesOptions(MatchedPaths: [], Pattern: "unknownfile.md");
 
         // Act
         var results = await collector.CollectAsync(SlnxPath, options, CancellationToken.None);
