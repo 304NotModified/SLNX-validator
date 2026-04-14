@@ -13,10 +13,12 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageIcon>packageIcon.png</PackageIcon>
 
-    <VersionPrefix>0.5.0</VersionPrefix>
+    <VersionPrefix>0.6.0</VersionPrefix>
     <PackageReleaseNotes>
-* feat: log SQ report file path and size to console after generation  in https://github.com/304NotModified/SLNX-validator/pull/47
-* chore: change SonarQube impact severity from HIGH to MEDIUM by  in https://github.com/304NotModified/SLNX-validator/pull/49
+* feat: Add SARIF 2.1.0 report output in https://github.com/304NotModified/SLNX-validator/pull/56
+* feat: Add CLI severity override flags (--blocker, --critical, --major, --minor, --info, --ignore) in https://github.com/304NotModified/SLNX-validator/pull/45
+* fix: IsFailingError respects default rule severity instead of always returning true in https://github.com/304NotModified/SLNX-validator/pull/66
+* fix: Eliminate duplicate paths in SonarQube report output in https://github.com/304NotModified/SLNX-validator/pull/55
 	</PackageReleaseNotes>
   </PropertyGroup>
 
