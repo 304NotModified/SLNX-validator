@@ -10,7 +10,7 @@ public sealed class SarifReporter(IFileSystem fileSystem) : ReporterBase(fileSys
     private const string SarifSchema = "https://json.schemastore.org/sarif-2.1.0.json";
     private const string SarifVersion = "2.1.0";
     private const string ToolName = "slnx-validator";
-    private const string ToolInformationUri = "https://github.com/304NotModified/SLNX-validator";
+    private static readonly string ToolInformationUri = ThisAssembly.Info.RepositoryUrl;
 
     public override async Task WriteReportAsync(ReportResults reportResults, Stream outputStream)
     {
