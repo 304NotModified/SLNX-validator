@@ -9,14 +9,14 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidatorRunnerTests
 {
-    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null, IConsole? console = null)
+    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IConsole console, IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var resolver = Substitute.For<ISlnxFileResolver>();
         var collector = new SlnxCollector(fileSystem, resolver, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console ?? new TestConsole());
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console);
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
@@ -24,7 +24,7 @@ public class ValidatorRunnerTests
         new(input, SonarqubeReportPath: null, continueOnError, requiredFilesPattern, WorkingDirectory: ".");
 
     private static ValidatorRunner CreateRunnerWithSlnx(
-        string slnxPath, string slnxContent, IRequiredFilesChecker? checker = null, IConsole? console = null)
+        string slnxPath, string slnxContent, IConsole console, IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
@@ -39,7 +39,7 @@ public class ValidatorRunnerTests
         var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console ?? new TestConsole());
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console);
     }
 
     #region RunAsync – file resolution
@@ -48,7 +48,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_FileNotFound_ContinueOnErrorFalse_ReturnsOne()
     {
         // Arrange
-        var runner = CreateRunner(new MockFileSystem());
+        var runner = CreateRunner(new MockFileSystem(), new FakeConsole());
 
         // Act
         var exitCode = await runner.RunAsync(Options("nonexistent.slnx"), CancellationToken.None);
@@ -61,7 +61,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_FileNotFound_ContinueOnErrorTrue_ReturnsZero()
     {
         // Arrange
-        var runner = CreateRunner(new MockFileSystem());
+        var runner = CreateRunner(new MockFileSystem(), new FakeConsole());
 
         // Act
         var exitCode = await runner.RunAsync(Options("nonexistent.slnx", continueOnError: true), CancellationToken.None);
@@ -74,7 +74,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_NoFilesFound_ContinueOnErrorFalse_ReturnsOne()
     {
         // Arrange
-        var runner = CreateRunner(new MockFileSystem());
+        var runner = CreateRunner(new MockFileSystem(), new FakeConsole());
 
         // Act
         var exitCode = await runner.RunAsync(Options("src/*.slnx"), CancellationToken.None);
@@ -87,7 +87,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_NoFilesFound_ContinueOnErrorTrue_ReturnsZero()
     {
         // Arrange
-        var runner = CreateRunner(new MockFileSystem());
+        var runner = CreateRunner(new MockFileSystem(), new FakeConsole());
 
         // Act
         var exitCode = await runner.RunAsync(Options("src/*.slnx", continueOnError: true), CancellationToken.None);
@@ -114,7 +114,7 @@ public class ValidatorRunnerTests
         checker.CheckInSlnx(Arg.Any<IReadOnlyList<string>>(), Arg.Any<SlnxFile>())
             .Returns([]);
 
-        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", checker);
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", new FakeConsole(), checker);
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -134,7 +134,7 @@ public class ValidatorRunnerTests
         checker.ResolveMatchedPaths(Arg.Any<string>(), Arg.Any<string>())
             .Returns([]); // nothing matched on disk
 
-        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", checker);
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", new FakeConsole(), checker);
 
         // Act
         var exitCode = await runner.RunAsync(
@@ -155,7 +155,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_IgnoreAllCodes_WithErrors_ReturnsZero()
     {
         // Arrange: file with wrong extension generates SLNX002; --ignore * suppresses all codes
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "*");
 
         // Act
@@ -171,7 +171,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_IgnoreSpecificCode_ThatCodeDoesNotCauseExitOne()
     {
         // Arrange: --ignore SLNX002 suppresses the InvalidExtension error
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, null, null, null, ignore: "SLNX002");
 
         // Act
@@ -187,7 +187,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_MinorOverrideForErrorCode_ReturnsZero()
     {
         // Arrange: --minor SLNX002 downgrades InvalidExtension to non-failing severity
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, null, minor: "SLNX002", null, null);
 
         // Act
@@ -203,7 +203,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_InfoAllCodes_ReturnsZero()
     {
         // Arrange: --info * downgrades all codes to INFO (non-failing)
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, null, null, info: "*", null);
 
         // Act
@@ -219,7 +219,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_InfoAllCodesMajorSpecificCode_SpecificCodeCausesExitOne()
     {
         // Arrange: --info * --major SLNX002  →  SLNX002 stays MAJOR (specific overrides wildcard)
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, info: "*", null);
 
         // Act
@@ -235,7 +235,7 @@ public class ValidatorRunnerTests
     public async Task RunAsync_IgnoreAllCodesMajorSpecificCode_SpecificCodeCausesExitOne()
     {
         // Arrange: --ignore * --major SLNX002  →  SLNX002 is MAJOR (specific wins over wildcard ignore)
-        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />");
+        var runner = CreateRunnerWithSlnx("test.xml", "<Solution />", new FakeConsole());
         var overrides = SeverityOverridesParser.Parse(null, null, major: "SLNX002", null, null, ignore: "*");
 
         // Act
@@ -255,14 +255,14 @@ public class ValidatorRunnerTests
     public async Task RunAsync_NoFilesFound_WritesErrorToConsole()
     {
         // Arrange
-        var console = new TestConsole();
-        var runner = CreateRunner(new MockFileSystem(), console: console);
+        var console = new FakeConsole();
+        var runner = CreateRunner(new MockFileSystem(), console);
 
         // Act
         await runner.RunAsync(Options("nonexistent.slnx"), CancellationToken.None);
 
         // Assert
-        console.Error.ToString().Should().Contain("No .slnx files found for input: nonexistent.slnx");
+        console.ErrorOutput.Should().ContainMatch("*No .slnx files found for input: nonexistent.slnx*");
     }
 
     [Test]
@@ -270,8 +270,8 @@ public class ValidatorRunnerTests
     {
         // Arrange
         var slnxPath = Path.GetFullPath("test.slnx");
-        var console = new TestConsole();
-        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console: console);
+        var console = new FakeConsole();
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console);
         var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: "report.xml",
             ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".");
 
@@ -279,7 +279,7 @@ public class ValidatorRunnerTests
         await runner.RunAsync(options, CancellationToken.None);
 
         // Assert
-        console.Out.ToString().Should().Contain("SonarQube report written to: report.xml");
+        console.Output.Should().ContainMatch("*SonarQube report written to: report.xml*");
     }
 
     [Test]
@@ -287,8 +287,8 @@ public class ValidatorRunnerTests
     {
         // Arrange
         var slnxPath = Path.GetFullPath("test.slnx");
-        var console = new TestConsole();
-        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console: console);
+        var console = new FakeConsole();
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console);
         var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: null,
             ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".",
             SarifReportPath: "report.sarif");
@@ -297,7 +297,7 @@ public class ValidatorRunnerTests
         await runner.RunAsync(options, CancellationToken.None);
 
         // Assert
-        console.Out.ToString().Should().Contain("SARIF report written to: report.sarif");
+        console.Output.Should().ContainMatch("*SARIF report written to: report.sarif*");
     }
 
     #endregion

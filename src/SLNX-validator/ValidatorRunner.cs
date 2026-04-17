@@ -23,7 +23,7 @@ internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter so
 
         if (results.Count == 0)
         {
-            console.Error.Write($"No .slnx files found for input: {options.Input}{Environment.NewLine}");
+            await console.WriteErrorAsync($"No .slnx files found for input: {options.Input}{Environment.NewLine}");
             return options.ContinueOnError ? 0 : 1;
         }
 
@@ -34,14 +34,14 @@ internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter so
         {
             await sonarReporter.WriteReportAsync(reportResults, options.SonarqubeReportPath);
             var size = fileSystem.GetFileSize(options.SonarqubeReportPath);
-            console.Out.Write($"SonarQube report written to: {options.SonarqubeReportPath} ({size} bytes){Environment.NewLine}");
+            await console.WriteAsync($"SonarQube report written to: {options.SonarqubeReportPath} ({size} bytes){Environment.NewLine}");
         }
 
         if (options.SarifReportPath is not null)
         {
             await sarifReporter.WriteReportAsync(reportResults, options.SarifReportPath);
             var size = fileSystem.GetFileSize(options.SarifReportPath);
-            console.Out.Write($"SARIF report written to: {options.SarifReportPath} ({size} bytes){Environment.NewLine}");
+            await console.WriteAsync($"SARIF report written to: {options.SarifReportPath} ({size} bytes){Environment.NewLine}");
         }
 
         var hasErrors = results.Any(r => r.Errors.Any(e => options.SeverityOverrides.IsFailingError(e.Code)));

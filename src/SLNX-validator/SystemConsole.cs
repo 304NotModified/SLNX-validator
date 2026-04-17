@@ -2,11 +2,6 @@ namespace JulianVerdurmen.SlnxValidator;
 
 internal sealed class SystemConsole : IConsole
 {
-    public IStandardStreamWriter Out { get; } = new ConsoleStreamWriter(Console.Out);
-    public IStandardStreamWriter Error { get; } = new ConsoleStreamWriter(Console.Error);
-
-    private sealed class ConsoleStreamWriter(TextWriter writer) : IStandardStreamWriter
-    {
-        public void Write(string value) => writer.Write(value);
-    }
+    public Task WriteAsync(string value) => Console.Out.WriteAsync(value);
+    public Task WriteErrorAsync(string value) => Console.Error.WriteAsync(value);
 }
