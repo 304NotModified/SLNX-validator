@@ -58,9 +58,22 @@ public static class RuleProvider
         throw new ArgumentOutOfRangeException(nameof(code), code, null);
     }
 
+    public static RuleSeverity GetEffectiveSeverity(ValidationErrorCode code, SeverityOverrides overrides)
+    {
+        if (overrides.TryGetOverride(code, out var severity))
+            return severity;
+        return Get(code).DefaultSeverity;
+    }
+
+    public static bool IsFailingError(ValidationErrorCode code, SeverityOverrides overrides)
+    {
+        var effectiveSeverity = GetEffectiveSeverity(code, overrides);
+        return effectiveSeverity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
+    }
+
     public static ResolvedRule Resolve(ValidationErrorCode code, SeverityOverrides overrides)
     {
         var rule = Get(code);
-        return new ResolvedRule(rule.Id, rule.Name, rule.Description, overrides.GetEffectiveSeverity(code));
+        return new ResolvedRule(rule.Id, rule.Name, rule.Description, GetEffectiveSeverity(code, overrides));
     }
 }

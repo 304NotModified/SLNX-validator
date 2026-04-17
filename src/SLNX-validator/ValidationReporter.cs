@@ -12,7 +12,7 @@ internal static class ValidationReporter
 
         foreach (var result in results)
         {
-            var isFailingResult = result.Errors.Any(e => overrides.IsFailingError(e.Code));
+            var isFailingResult = result.Errors.Any(e => RuleProvider.IsFailingError(e.Code, overrides));
             Console.WriteLine(isFailingResult ? $"[FAIL] {result.File}" : $"[OK]   {result.File}");
         }
 
