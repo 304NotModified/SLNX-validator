@@ -9,21 +9,23 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidatorRunnerTests
 {
-    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null)
+    private readonly FakeConsole _console = new();
+
+    private ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var resolver = Substitute.For<ISlnxFileResolver>();
         var collector = new SlnxCollector(fileSystem, resolver, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, _console);
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
         bool continueOnError = false, string? requiredFilesPattern = null) =>
         new(input, SonarqubeReportPath: null, continueOnError, requiredFilesPattern, WorkingDirectory: ".");
 
-    private static ValidatorRunner CreateRunnerWithSlnx(
+    private ValidatorRunner CreateRunnerWithSlnx(
         string slnxPath, string slnxContent, IRequiredFilesChecker? checker = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
@@ -39,7 +41,7 @@ public class ValidatorRunnerTests
         var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, _console);
     }
 
     #region RunAsync – file resolution
@@ -248,5 +250,54 @@ public class ValidatorRunnerTests
     }
 
     #endregion
-}
 
+    #region RunAsync – console output
+
+    [Test]
+    public async Task RunAsync_NoFilesFound_WritesErrorToConsole()
+    {
+        // Arrange
+        var runner = CreateRunner(new MockFileSystem());
+
+        // Act
+        await runner.RunAsync(Options("nonexistent.slnx"), CancellationToken.None);
+
+        // Assert
+        _console.ErrorLines.Should().ContainMatch("*No .slnx files found for input: nonexistent.slnx*");
+    }
+
+    [Test]
+    public async Task RunAsync_SonarqubeReportPath_WritesConfirmationToConsole()
+    {
+        // Arrange
+        var slnxPath = Path.GetFullPath("test.slnx");
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />");
+        var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: "report.xml",
+            ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".");
+
+        // Act
+        await runner.RunAsync(options, CancellationToken.None);
+
+        // Assert
+        _console.OutputLines.Should().ContainMatch("*SonarQube report written to: report.xml*");
+    }
+
+    [Test]
+    public async Task RunAsync_SarifReportPath_WritesConfirmationToConsole()
+    {
+        // Arrange
+        var slnxPath = Path.GetFullPath("test.slnx");
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />");
+        var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: null,
+            ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".",
+            SarifReportPath: "report.sarif");
+
+        // Act
+        await runner.RunAsync(options, CancellationToken.None);
+
+        // Assert
+        _console.OutputLines.Should().ContainMatch("*SARIF report written to: report.sarif*");
+    }
+
+    #endregion
+}
