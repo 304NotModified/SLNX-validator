@@ -68,7 +68,7 @@ public sealed class SarifReporter(IFileSystem fileSystem) : ReporterBase(fileSys
 
     private static SarifResult BuildResult(string filePath, ValidationError error, SeverityOverrides overrides)
     {
-        var effectiveSeverity = overrides.GetEffectiveSeverity(error.Code);
+        var effectiveSeverity = RuleProvider.GetEffectiveSeverity(error.Code, overrides);
         return new SarifResult
         {
             RuleId = error.Code.ToCode(),

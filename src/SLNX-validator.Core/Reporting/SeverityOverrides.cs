@@ -24,17 +24,16 @@ public sealed class SeverityOverrides : IEnumerable<KeyValuePair<ValidationError
     public bool IsVisible(ValidationErrorCode code) =>
         !_overrides.TryGetValue(code, out var severity) || severity is not null;
 
-    public bool IsFailingError(ValidationErrorCode code)
+    internal bool TryGetOverride(ValidationErrorCode code, out RuleSeverity severity)
     {
-        var effectiveSeverity = GetEffectiveSeverity(code);
-        return effectiveSeverity is RuleSeverity.BLOCKER or RuleSeverity.CRITICAL or RuleSeverity.MAJOR;
-    }
+        if (_overrides.TryGetValue(code, out var value) && value.HasValue)
+        {
+            severity = value.Value;
+            return true;
+        }
 
-    public RuleSeverity GetEffectiveSeverity(ValidationErrorCode code)
-    {
-        if (_overrides.TryGetValue(code, out var severity) && severity.HasValue)
-            return severity.Value;
-        return RuleProvider.Get(code).DefaultSeverity;
+        severity = default;
+        return false;
     }
 
     public IReadOnlyList<ValidationErrorCode> GetUsedCodes(IReadOnlyList<FileValidationResult> results) =>

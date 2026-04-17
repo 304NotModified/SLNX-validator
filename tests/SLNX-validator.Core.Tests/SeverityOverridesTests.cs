@@ -15,7 +15,7 @@ public class SeverityOverridesTests
         var overrides = SeverityOverrides.Empty;
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.FileNotFound);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.FileNotFound, overrides);
 
         // Assert
         result.Should().BeTrue();
@@ -28,7 +28,7 @@ public class SeverityOverridesTests
         var overrides = SeverityOverrides.Empty;
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.InvalidExtension);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.InvalidExtension, overrides);
 
         // Assert
         result.Should().BeFalse();
@@ -41,7 +41,7 @@ public class SeverityOverridesTests
         var overrides = SeverityOverrides.Empty;
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.InvalidWildcardUsage);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.InvalidWildcardUsage, overrides);
 
         // Assert
         result.Should().BeFalse();
@@ -61,7 +61,7 @@ public class SeverityOverridesTests
         });
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.FileNotFound);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.FileNotFound, overrides);
 
         // Assert
         result.Should().BeFalse();
@@ -77,7 +77,7 @@ public class SeverityOverridesTests
         });
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.FileNotFound);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.FileNotFound, overrides);
 
         // Assert
         result.Should().BeFalse();
@@ -93,7 +93,7 @@ public class SeverityOverridesTests
         });
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.InvalidExtension);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.InvalidExtension, overrides);
 
         // Assert
         result.Should().BeTrue();
@@ -109,7 +109,7 @@ public class SeverityOverridesTests
         });
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.FileNotFound);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.FileNotFound, overrides);
 
         // Assert
         result.Should().BeTrue();
@@ -125,7 +125,7 @@ public class SeverityOverridesTests
         });
 
         // Act
-        var result = overrides.IsFailingError(ValidationErrorCode.FileNotFound);
+        var result = RuleProvider.IsFailingError(ValidationErrorCode.FileNotFound, overrides);
 
         // Assert
         result.Should().BeTrue();

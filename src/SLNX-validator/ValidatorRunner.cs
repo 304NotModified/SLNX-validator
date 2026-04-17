@@ -44,7 +44,7 @@ internal sealed class ValidatorRunner(SlnxCollector collector, ISonarReporter so
             Console.WriteLine($"SARIF report written to: {options.SarifReportPath} ({size} bytes)");
         }
 
-        var hasErrors = results.Any(r => r.Errors.Any(e => options.SeverityOverrides.IsFailingError(e.Code)));
+        var hasErrors = results.Any(r => r.Errors.Any(e => RuleProvider.IsFailingError(e.Code, options.SeverityOverrides)));
         return !options.ContinueOnError && hasErrors ? 1 : 0;
     }
 }
