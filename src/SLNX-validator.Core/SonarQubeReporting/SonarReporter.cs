@@ -7,15 +7,15 @@ namespace JulianVerdurmen.SlnxValidator.Core.SonarQubeReporting;
 
 public sealed class SonarReporter(IFileSystem fileSystem) : ReporterBase(fileSystem), ISonarReporter
 {
-    public override async Task WriteReportAsync(ReportResults reportResults, Stream outputStream)
+    public override async Task WriteReportAsync(ReportResults results, Stream outputStream)
     {
-        var usedCodes = reportResults.UsedCodes;
+        var usedCodes = results.UsedCodes;
 
-        var rules = usedCodes.Select(c => BuildRule(c, reportResults.Overrides)).ToList();
+        var rules = usedCodes.Select(c => BuildRule(c, results.Overrides)).ToList();
 
-        var issues = reportResults.Results
+        var issues = results.Results
             .SelectMany(r => r.Errors
-                .Where(e => !reportResults.Overrides.IsIgnored(e.Code))
+                .Where(e => !results.Overrides.IsIgnored(e.Code))
                 .Select(e => BuildIssue(r.File, e)))
             .ToList();
 

@@ -35,17 +35,14 @@ internal sealed class RequiredFilesChecker : IRequiredFilesChecker
         SlnxFile slnxFile)
     {
         var errors = new List<ValidationError>();
-        foreach (var requiredPath in requiredAbsolutePaths)
+        foreach (var requiredPath in requiredAbsolutePaths.Where(p => !slnxFile.Files.Contains(p, StringComparer.OrdinalIgnoreCase)))
         {
-            if (!slnxFile.Files.Contains(requiredPath, StringComparer.OrdinalIgnoreCase))
-            {
-                var relativePath = Path.GetRelativePath(slnxFile.SlnxDirectory, requiredPath).Replace('\\', '/');
-                errors.Add(new ValidationError(
-                    ValidationErrorCode.RequiredFileNotReferencedInSolution,
-                    $"Required file is not referenced in the solution: {requiredPath}" +
-                    $" — add: <File Path=\"{relativePath}\" />",
-                    ShortMessage: $"Required file is not referenced in the solution — add: <File Path=\"{relativePath}\" />"));
-            }
+            var relativePath = Path.GetRelativePath(slnxFile.SlnxDirectory, requiredPath).Replace('\\', '/');
+            errors.Add(new ValidationError(
+                ValidationErrorCode.RequiredFileNotReferencedInSolution,
+                $"Required file is not referenced in the solution: {requiredPath}" +
+                $" — add: <File Path=\"{relativePath}\" />",
+                ShortMessage: $"Required file is not referenced in the solution — add: <File Path=\"{relativePath}\" />"));
         }
 
         return errors;

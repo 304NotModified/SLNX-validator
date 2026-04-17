@@ -12,18 +12,18 @@ public sealed class SarifReporter(IFileSystem fileSystem) : ReporterBase(fileSys
     private const string ToolName = "slnx-validator";
     private static readonly string ToolInformationUri = ThisAssembly.Info.RepositoryUrl;
 
-    public override async Task WriteReportAsync(ReportResults reportResults, Stream outputStream)
+    public override async Task WriteReportAsync(ReportResults results, Stream outputStream)
     {
-        var usedCodes = reportResults.UsedCodes;
+        var usedCodes = results.UsedCodes;
 
         var rules = usedCodes
-            .Select(c => BuildRule(c, reportResults.Overrides))
+            .Select(c => BuildRule(c, results.Overrides))
             .ToList();
 
-        var sarifResults = reportResults.Results
+        var sarifResults = results.Results
             .SelectMany(r => r.Errors
-                .Where(e => !reportResults.Overrides.IsIgnored(e.Code))
-                .Select(e => BuildResult(r.File, e, reportResults.Overrides)))
+                .Where(e => !results.Overrides.IsIgnored(e.Code))
+                .Select(e => BuildResult(r.File, e, results.Overrides)))
             .ToList();
 
         var log = new SarifLog

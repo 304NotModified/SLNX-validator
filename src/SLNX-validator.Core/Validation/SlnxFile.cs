@@ -105,12 +105,8 @@ public sealed class SlnxFile
     private static IReadOnlyList<string> ComputeAbsoluteFiles(SlnxSolution solution, string slnxDirectory)
     {
         var refs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var entry in solution.AllFiles())
+        foreach (var path in solution.AllFiles().Where(entry => !string.IsNullOrEmpty(entry.Path)).Select(entry => entry.Path))
         {
-            var path = entry.Path;
-            if (string.IsNullOrEmpty(path))
-                continue;
-
             var fullPath = Path.IsPathRooted(path)
                 ? Path.GetFullPath(path)
                 : Path.GetFullPath(Path.Combine(slnxDirectory, path));
