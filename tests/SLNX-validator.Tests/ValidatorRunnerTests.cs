@@ -9,14 +9,14 @@ namespace JulianVerdurmen.SlnxValidator.Tests;
 
 public class ValidatorRunnerTests
 {
-    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null)
+    private static ValidatorRunner CreateRunner(IFileSystem fileSystem, IRequiredFilesChecker? checker = null, IConsole? console = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var resolver = Substitute.For<ISlnxFileResolver>();
         var collector = new SlnxCollector(fileSystem, resolver, Substitute.For<ISlnxValidator>(), checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console ?? new TestConsole());
     }
 
     private static ValidatorRunnerOptions Options(string input = "test.slnx",
@@ -24,7 +24,7 @@ public class ValidatorRunnerTests
         new(input, SonarqubeReportPath: null, continueOnError, requiredFilesPattern, WorkingDirectory: ".");
 
     private static ValidatorRunner CreateRunnerWithSlnx(
-        string slnxPath, string slnxContent, IRequiredFilesChecker? checker = null)
+        string slnxPath, string slnxContent, IRequiredFilesChecker? checker = null, IConsole? console = null)
     {
         checker ??= Substitute.For<IRequiredFilesChecker>();
         var fileSystem = new MockFileSystem(new Dictionary<string, string>
@@ -39,7 +39,7 @@ public class ValidatorRunnerTests
         var collector = new SlnxCollector(fileSystem, resolver, validator, checker);
         var sonarReporter = new SonarReporter(fileSystem);
         var sarifReporter = new SarifReporter(fileSystem);
-        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem);
+        return new ValidatorRunner(collector, sonarReporter, sarifReporter, checker, fileSystem, console ?? new TestConsole());
     }
 
     #region RunAsync – file resolution
@@ -245,6 +245,59 @@ public class ValidatorRunnerTests
 
         // Assert
         exitCode.Should().Be(1);
+    }
+
+    #endregion
+
+    #region RunAsync – console output
+
+    [Test]
+    public async Task RunAsync_NoFilesFound_WritesErrorToConsole()
+    {
+        // Arrange
+        var console = new TestConsole();
+        var runner = CreateRunner(new MockFileSystem(), console: console);
+
+        // Act
+        await runner.RunAsync(Options("nonexistent.slnx"), CancellationToken.None);
+
+        // Assert
+        console.Error.ToString().Should().Contain("No .slnx files found for input: nonexistent.slnx");
+    }
+
+    [Test]
+    public async Task RunAsync_SonarqubeReportPath_WritesConfirmationToConsole()
+    {
+        // Arrange
+        var slnxPath = Path.GetFullPath("test.slnx");
+        var console = new TestConsole();
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console: console);
+        var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: "report.xml",
+            ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".");
+
+        // Act
+        await runner.RunAsync(options, CancellationToken.None);
+
+        // Assert
+        console.Out.ToString().Should().Contain("SonarQube report written to: report.xml");
+    }
+
+    [Test]
+    public async Task RunAsync_SarifReportPath_WritesConfirmationToConsole()
+    {
+        // Arrange
+        var slnxPath = Path.GetFullPath("test.slnx");
+        var console = new TestConsole();
+        var runner = CreateRunnerWithSlnx(slnxPath, "<Solution />", console: console);
+        var options = new ValidatorRunnerOptions(slnxPath, SonarqubeReportPath: null,
+            ContinueOnError: false, RequiredFilesPattern: null, WorkingDirectory: ".",
+            SarifReportPath: "report.sarif");
+
+        // Act
+        await runner.RunAsync(options, CancellationToken.None);
+
+        // Assert
+        console.Out.ToString().Should().Contain("SARIF report written to: report.sarif");
     }
 
     #endregion
